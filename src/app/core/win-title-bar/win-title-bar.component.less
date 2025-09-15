@@ -1,14 +1,78 @@
-.bar{
+.bar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     height: 36px;
-    background-color: #E8E8E8;
-    -webkit-app-region:drag;
-    .icon{
-        background: url(../../../../public/favicon.ico);
-        background-size: 18px 18px;
-        height: 18px;
-        width: 18px;
-        margin-left: 9px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    -webkit-app-region: drag;
+    user-select: none;
+    
+    .left-section {
+        display: flex;
+        align-items: center;
+        padding-left: 12px;
+        
+        .icon {
+            background: url(../../../../public/favicon.ico);
+            background-size: 18px 18px;
+            height: 18px;
+            width: 18px;
+            margin-right: 8px;
+        }
+        
+        .app-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+            letter-spacing: 0.3px;
+        }
+    }
+    
+    .center-section {
+        flex: 1;
+        text-align: center;
+        color: #6c757d;
+        font-size: 12px;
+    }
+    
+    .right-section {
+        display: flex;
+        align-items: center;
+        
+        .window-controls {
+            display: flex;
+            -webkit-app-region: no-drag;
+            
+            .control-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 46px;
+                height: 36px;
+                border: none;
+                background: transparent;
+                color: #495057;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+                
+                &:hover {
+                    background-color: #e9ecef;
+                }
+                
+                &.close-btn:hover {
+                    background-color: #dc3545;
+                    color: white;
+                }
+                
+                svg {
+                    opacity: 0.8;
+                }
+                
+                &:hover svg {
+                    opacity: 1;
+                }
+            }
+        }
     }
 }

@@ -7,5 +7,4 @@ import { Component } from '@angular/core';
   styleUrl: './win-title-bar.component.less'
 })
 export class WinTitleBarComponent {
-
 }

@@ -1,0 +1,62 @@
+<div class="login-container">
+  <div class="login-content">
+    <!-- Left side - Notebook illustration -->
+    <div class="illustration-section">
+      <div class="illustration-wrapper">
+        <img src="assets/images/notebook.jpg" alt="Notebook illustration" class="notebook-image">
+        <div class="illustration-overlay">
+          <h1 class="app-title">AquaNote</h1>
+          <p class="app-subtitle">Your digital notebook companion</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right side - Login form -->
+    <div class="form-section">
+      <div class="form-wrapper">
+        <div class="form-header">
+          <h2>Welcome Back</h2>
+          <p>Sign in to continue to AquaNote</p>
+        </div>
+
+        <form class="login-form" (ngSubmit)="onLogin()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" [(ngModel)]="email" name="email" required>
+            <mat-icon matSuffix>email</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" [(ngModel)]="password" name="password" required>
+            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <div class="form-options">
+            <mat-checkbox [(ngModel)]="rememberMe" name="rememberMe">Remember me</mat-checkbox>
+            <a href="#" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <button mat-raised-button color="primary" type="submit" class="login-button full-width">
+            Sign In
+          </button>
+
+          <div class="divider">
+            <span>or</span>
+          </div>
+
+          <button mat-stroked-button type="button" class="google-button full-width">
+            <mat-icon>account_circle</mat-icon>
+            Continue with Google
+          </button>
+
+          <div class="signup-link">
+            Don't have an account? <a href="#" class="link">Sign up</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
