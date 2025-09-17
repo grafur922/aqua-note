@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../core/services/auth.service';
-import { LoginCredentials } from '../../core/models/login-credentials.model';
+import { LoginCredentials } from './models/login-credentials.model';
 @Component({
   selector: 'app-login',
   imports: [

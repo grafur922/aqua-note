@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, map, Observable, of, shareReplay } from 'rxjs';
-import { LoginCredentials } from '../models/login-credentials.model';
+import { LoginCredentials } from '../../features/login/models/login-credentials.model';
 import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../interfaces/ApiResponse';
-import { LoginInfo } from '../models/login-info.model';
+import { LoginInfo } from '../../features/login/models/login-info.model';
 export interface User {
   id: string;
   email: string;
