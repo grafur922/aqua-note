@@ -1,13 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormsModule,FormGroup,FormControl,Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../core/services/auth.service';
-
+import { LoginCredentials } from '../../core/models/login-credentials.model';
 @Component({
   selector: 'app-login',
   imports: [
@@ -16,45 +16,37 @@ import { AuthService } from '../../core/services/auth.service';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    ReactiveFormsModule
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.less'
 })
 export class LoginComponent {
-  email: string = '';
-  password: string = '';
   hidePassword: boolean = true;
   rememberMe: boolean = false;
-
+  private router=inject(Router)
+  private authService=inject(AuthService)
   constructor(
-    private authService: AuthService,
-    private router: Router
   ) {}
-
-  onLogin() {
-    if (!this.email || !this.password) {
-      return;
-    }
-
-    this.authService.login(this.email, this.password).subscribe({
-      next: (success) => {
-        if (success) {
-          // 检查是否有重定向URL
-          const redirectUrl = localStorage.getItem('redirect_url');
-          if (redirectUrl) {
-            localStorage.removeItem('redirect_url');
-            this.router.navigateByUrl(redirectUrl);
-          } else {
-            this.router.navigate(['/']);
-          }
-        } else {
-          console.error('Login failed');
+  loginForm=new FormGroup({
+    email:new FormControl('',[Validators.required,Validators.email]),
+    password:new FormControl('',[Validators.required])
+  })
+  onSubmit() {
+    
+    if (this.loginForm.valid) {
+      const credentials: LoginCredentials = this.loginForm.value as LoginCredentials;
+      this.authService.login(credentials).subscribe({
+        next: (response) => {
+          console.log('Login successful', response);
+          this.router.navigate(['/']); // 登录成功后导航到主页
+        },
+        error: (error) => {
+          console.error('Login failed', error);
+          // 在这里处理错误，例如显示一个提示消息
         }
-      },
-      error: (error) => {
-        console.error('Login error:', error);
-      }
-    });
+      });
+    }
   }
 }

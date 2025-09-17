@@ -1,24 +1,49 @@
 .login-container {
   height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
   overflow: auto;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url(../../../assets/images/background.jpg);
+    background-size: cover;
+    background-position: center;
+    filter: blur(3px);
+    z-index: -1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+  }
 }
 
 .login-content {
   display: flex;
   width: 100%;
-  max-width: 1200px;
+  max-width: 900px;
   height: 100%;
-  max-height: 700px;
+  max-height: 500px;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
@@ -51,8 +76,8 @@
 .illustration-overlay {
   position: absolute;
   bottom: 40px;
-  left: 40px;
-  color: white;
+  left: 30px;
+  color: #483D8B;
   z-index: 2;
 }
 
@@ -75,18 +100,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 40px;
+  padding: 40px 30px;
   background: white;
 }
 
 .form-wrapper {
   width: 100%;
-  max-width: 400px;
+  max-width: 320px;
 }
 
 .form-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 
   h2 {
     font-size: 2rem;
@@ -105,14 +130,14 @@
 .login-form {
   .full-width {
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
   }
 
   .form-options {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
 
     .forgot-password {
       color: #667eea;
@@ -132,7 +157,7 @@
     margin-bottom: 20px;
     background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
     border: none;
-    
+    color: #fff;
     &:hover {
       background: linear-gradient(45deg, #5a6fd8 0%, #6a4190 100%);
     }
@@ -140,7 +165,7 @@
 
   .divider {
     text-align: center;
-    margin: 20px 0;
+    margin: 0px 0;
     position: relative;
     
     &::before {

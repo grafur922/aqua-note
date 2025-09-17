@@ -26,7 +26,6 @@ export class LoginRedirectGuard implements CanActivate {
       take(1),
       map(isAuthenticated => {
         if (isAuthenticated) {
-          // 检查是否有重定向URL
           const redirectUrl = localStorage.getItem('redirect_url');
           if (redirectUrl) {
             localStorage.removeItem('redirect_url');
