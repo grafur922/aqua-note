@@ -1,6 +1,9 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-
+import { inject, Injectable } from '@angular/core';
+import { BehaviorSubject, catchError, map, Observable, of, shareReplay } from 'rxjs';
+import { LoginCredentials } from '../models/login-credentials.model';
+import { HttpClient } from '@angular/common/http';
+import { ApiResponse } from '../interfaces/ApiResponse';
+import { LoginInfo } from '../models/login-info.model';
 export interface User {
   id: string;
   email: string;
@@ -16,6 +19,9 @@ export class AuthService {
 
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+
+  private http = inject(HttpClient)
+  // public userdata$:Observable
 
   constructor() {
     // 检查本地存储中是否有用户信息
@@ -44,30 +50,35 @@ export class AuthService {
   /**
    * 用户登录
    */
-  login(email: string, password: string): Observable<boolean> {
-    return new Observable(observer => {
-
-      setTimeout(() => {
-        if (email && password) {
+  login(loginCredentials: LoginCredentials): Observable<boolean> {
+    return this.http.post<ApiResponse<LoginInfo>>('/api/user/login', loginCredentials).pipe(
+      map(res => {
+        if (res.code === 200 && res.data) {
           const user: User = {
-            id: '1',
-            email: email,
-            name: email.split('@')[0]
+            id: res.data.userId,
+            email: res.data.email,
+            name: res.data.userName
           };
 
+          // Assuming a token is part of the response or handled elsewhere.
+          // For now, using a mock token as in the original commented-out code.
           localStorage.setItem('auth_token', 'mock_token_' + Date.now());
           localStorage.setItem('current_user', JSON.stringify(user));
-          
+
           this.currentUserSubject.next(user);
           this.isAuthenticatedSubject.next(true);
-          
-          observer.next(true);
+
+          return true;
         } else {
-          observer.next(false);
+          console.error('Login failed:', res.message);
+          return false;
         }
-        observer.complete();
-      }, 1000);
-    });
+      }),
+      catchError(err => {
+        console.error('Login request failed:', err);
+        return of(false); // Return an observable of false on error
+      })
+    );
   }
 
   /**

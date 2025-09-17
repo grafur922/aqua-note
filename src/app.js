@@ -14,7 +14,7 @@ function createWindow() {
     },
     show: false,
     titleBarStyle: 'hidden',
-    ...(process.platform !== 'darwin' ? { titleBarOverlay: { color: '#E8E8E8', symbolColor: '#000', height: 35 } } : {}),
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: { color: '#fff', symbolColor: '#000', height: 44 } } : {}),
     icon: path.join(__dirname, '../public/favicon.ico')
   });
   
@@ -23,8 +23,7 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:4200');
     mainWindow.webContents.openDevTools();
   } else {
-
-    mainWindow.loadFile(path.join(__dirname, '../dist/aqua-note/index.html'));
+    mainWindow.loadFile(path.join(__dirname, '../dist/browser/index.html'));
   }
 
   mainWindow.loadURL('http://localhost:4200');
