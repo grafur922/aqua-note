@@ -9,50 +9,46 @@ import { RoleGuard } from './core/guards/role.guard';
 import { PermissionGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
-  // 公共路由
   { 
     path: 'login', 
     component: LoginComponent,
-    canActivate: [LoginRedirectGuard] // 已登录用户重定向到首页
+    canActivate: [LoginRedirectGuard]
   },
   { 
     path: 'register', 
     component: RegisterComponent,
-    canActivate: [LoginRedirectGuard] // 已登录用户重定向到首页
+    canActivate: [LoginRedirectGuard]
   },
   { 
     path: 'unauthorized', 
     component: UnauthorizedComponent 
   },
 
-  // 受保护的路由 - 需要登录
   { 
     path: '', 
     component: HomeComponent,
-    canActivate: [AuthGuard] // 需要登录才能访问
+    canActivate: [AuthGuard] 
   },
 
-  // 示例：受保护的路由组
   {
     path: 'dashboard',
-    component: HomeComponent, // 临时使用 HomeComponent
+    component: HomeComponent,
     canActivate: [AuthGuard],
     children: [
       {
         path: 'profile',
-        component: HomeComponent, // 临时使用 HomeComponent
+        component: HomeComponent,
         canActivate: [PermissionGuard],
         data: { permissions: ['profile_read'] }
       },
       {
         path: 'admin',
-        component: HomeComponent, // 临时使用 HomeComponent
+        component: HomeComponent, 
         canActivate: [RoleGuard],
         data: { roles: ['admin'] }
       }
     ]
   },
 
-  // 通配符路由 - 必须放在最后
   { path: '**', redirectTo: '/login' }
 ];
