@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './core/home/home.component';
-import { LoginComponent } from './pages/login/login.component';
-import { RegisterComponent } from './pages/register/register.component';
-import { UnauthorizedComponent } from './pages/unauthorized/unauthorized.component';
+import { HomeComponent } from './features/home/home.component';
+import { LoginComponent } from './features/login/login.component';
+import { RegisterComponent } from './features/register/register.component';
+import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { LoginRedirectGuard } from './core/guards/login-redirect.guard';
 import { RoleGuard } from './core/guards/role.guard';
