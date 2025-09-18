@@ -1,5 +1,53 @@
+@icon-primary-color:#0c04571f;
+@icon-secondary-color:#0c0457;
+@icon-hover-color:#ededed;
+@font-primary-color:#e9ecef;
+@divide-style: 1px solid #e9ecef;
+@shadow-default-style:1px 1px 2px #e3e3e3,
+-1px -1px 2px #e3e3e3;
+@import url(./assets/icons/iconSet/iconfont.css);
+.fc{
+    display: flex;
+    flex-direction: column;
+}
+.frc{
+    display: flex;
+    justify-content: center;
+}
+.fcc{
+    .fc();
+    justify-content: center;
+}
+.frcc{
+    .frc();
+    align-items: center;
+}
+.fjc{
+    display: flex;
+    justify-content: center;
+}
+.fjb{
+    display: flex;
+    justify-content: space-between;
+}
 
+.f12{
+    font-size: 12px;
+}
+.f13{
+    font-size: 13px;
+}
 
+.iconfont{
+    cursor: pointer;
+    padding: 3px;
+}
+.iconfont-hover{
+    &:hover{
+        border-radius: 2px;
+        background-color: @icon-hover-color;
+    }
+}
 
 
 
@@ -10,6 +58,8 @@
     box-sizing: border-box;
     list-style-type: none;
 }
+
+
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

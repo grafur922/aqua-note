@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './features/home/home.component';
+import { HomeComponent } from './core/components/home/home.component';
 import { LoginComponent } from './features/login/login.component';
 import { RegisterComponent } from './features/register/register.component';
 import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
@@ -7,6 +7,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { LoginRedirectGuard } from './core/guards/login-redirect.guard';
 import { RoleGuard } from './core/guards/role.guard';
 import { PermissionGuard } from './core/guards/permission.guard';
+import { NoteListComponent } from './features/note-list/note-list.component';
 
 export const routes: Routes = [
   { 
@@ -27,7 +28,11 @@ export const routes: Routes = [
   { 
     path: '', 
     component: HomeComponent,
-    canActivate: [AuthGuard] 
+    canActivate: [AuthGuard],
+    children: [
+      { path: '', redirectTo: 'notes', pathMatch: 'full' },
+      { path: 'notes', component: NoteListComponent },
+    ]
   },
 
   {

@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { WinTitleBarComponent } from "../win-title-bar/win-title-bar.component";
+import { SidebarComponent } from "../sidebar/sidebar.component";
+import { RouterOutlet } from "@angular/router";
 
 @Component({
   selector: 'app-home',
-  imports: [WinTitleBarComponent],
+  imports: [SidebarComponent, RouterOutlet],
   templateUrl: './home.component.html',
   styleUrl: './home.component.less'
 })
