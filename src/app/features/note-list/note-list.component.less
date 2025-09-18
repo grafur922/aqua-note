@@ -1,0 +1,33 @@
+@import url(../../../styles.less);
+.noteListMain {
+    width: 200px;
+    height: 100vh;
+    border-right: @divide-style;
+    padding: 10px;
+    user-select: none;
+    .toolbar{
+        .fjb();
+        color: #444;
+        .addnote{
+            cursor: pointer;
+            width: 80px;
+            height: 22px;
+            // border: 1px solid #888;
+            box-shadow: @shadow-default-style;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            span{
+                &:nth-child(1){
+                    padding-left: 12px;
+                }
+            }
+        }
+        padding-bottom: 6px;
+        border-bottom: @divide-style;
+    }
+}
+
+.icon-list{
+    font-size: 18px;
+}
