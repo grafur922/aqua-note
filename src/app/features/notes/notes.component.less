@@ -1,0 +1,162 @@
+.notes-editor {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    
+    .editor-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e0e0e0;
+        background-color: #f8f9fa;
+        
+        .toolbar-left {
+            display: flex;
+            gap: 8px;
+            
+            .format-btn {
+                background: none;
+                border: 1px solid #ddd;
+                padding: 6px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                color: #555;
+                
+                &:hover {
+                    background-color: #e9ecef;
+                    border-color: #adb5bd;
+                }
+            }
+        }
+        
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            
+            .save-status {
+                font-size: 11px;
+                color: #666;
+            }
+            
+            .action-btn {
+                background: #007acc;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 11px;
+                
+                &:hover:not(:disabled) {
+                    background: #005a9e;
+                }
+                
+                &:disabled {
+                    background: #ccc;
+                    cursor: not-allowed;
+                }
+                
+                &.sync-btn {
+                    background: #28a745;
+                    
+                    &:hover {
+                        background: #218838;
+                    }
+                }
+            }
+        }
+    }
+    
+    .note-title-container {
+        padding: 20px 20px 0 20px;
+        
+        .note-title-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            padding: 10px 0;
+            background: transparent;
+            
+            &::placeholder {
+                color: #999;
+            }
+        }
+    }
+    
+    .note-content-container {
+        flex: 1;
+        padding: 0 20px;
+        
+        .note-content {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            
+            &::placeholder {
+                color: #999;
+            }
+        }
+    }
+    
+    .note-info {
+        padding: 10px 20px;
+        border-top: 1px solid #f0f0f0;
+        background-color: #f8f9fa;
+        
+        .note-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            color: #666;
+            
+            span {
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
+}
+
+.empty-editor {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .empty-content {
+        text-align: center;
+        color: #999;
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        p {
+            margin: 0;
+            font-size: 14px;
+            color: #999;
+        }
+    }
+}

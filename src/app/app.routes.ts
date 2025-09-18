@@ -7,7 +7,6 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { LoginRedirectGuard } from './core/guards/login-redirect.guard';
 import { RoleGuard } from './core/guards/role.guard';
 import { PermissionGuard } from './core/guards/permission.guard';
-import { NoteListComponent } from './features/note-list/note-list.component';
 
 export const routes: Routes = [
   { 
@@ -28,31 +27,7 @@ export const routes: Routes = [
   { 
     path: '', 
     component: HomeComponent,
-    canActivate: [AuthGuard],
-    children: [
-      { path: '', redirectTo: 'notes', pathMatch: 'full' },
-      { path: 'notes', component: NoteListComponent },
-    ]
-  },
-
-  {
-    path: 'dashboard',
-    component: HomeComponent,
-    canActivate: [AuthGuard],
-    children: [
-      {
-        path: 'profile',
-        component: HomeComponent,
-        canActivate: [PermissionGuard],
-        data: { permissions: ['profile_read'] }
-      },
-      {
-        path: 'admin',
-        component: HomeComponent, 
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'] }
-      }
-    ]
+    canActivate: [AuthGuard]
   },
 
   { path: '**', redirectTo: '/login' }

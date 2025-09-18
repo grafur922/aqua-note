@@ -1,0 +1,77 @@
+<div class="notes-editor" *ngIf="isEditing && currentNote; else emptyState">
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <button class="format-btn" (click)="insertFormat('bold')" title="粗体">
+        <strong>B</strong>
+      </button>
+      <button class="format-btn" (click)="insertFormat('italic')" title="斜体">
+        <em>I</em>
+      </button>
+      <button class="format-btn" (click)="insertFormat('code')" title="代码">
+        &lt;/&gt;
+      </button>
+      <button class="format-btn" (click)="insertFormat('list')" title="列表">
+        ≡
+      </button>
+    </div>
+    
+    <div class="toolbar-right">
+      <span class="save-status" *ngIf="isSaving">保存中...</span>
+      <span class="save-status" *ngIf="!isSaving && lastSaved">{{ getLastSavedText() }}</span>
+      
+      <button class="action-btn" (click)="manualSave()" [disabled]="isSaving" title="手动保存">
+        保存
+      </button>
+      <button class="action-btn sync-btn" (click)="syncNotes()" title="同步到云端">
+        同步
+      </button>
+    </div>
+  </div>
+
+
+  <div class="note-title-container">
+    <input 
+      type="text" 
+      class="note-title-input"
+      [(ngModel)]="currentNote.title"
+      (input)="onTitleChange(currentNote.title)"
+      placeholder="笔记标题..."
+      maxlength="100">
+  </div>
+
+
+  <div class="note-content-container">
+    <textarea 
+      class="note-content"
+      [(ngModel)]="currentNote.content"
+      (input)="onContentChange(currentNote.content)"
+      placeholder="开始写下你的想法..."
+      rows="20">
+    </textarea>
+  </div>
+
+
+  <div class="note-info">
+    <div class="note-meta">
+      <span *ngIf="currentNote.createdAt">
+        创建于: {{ currentNote.createdAt | date:'yyyy-MM-dd HH:mm' }}
+      </span>
+      <span *ngIf="currentNote.updatedAt">
+        更新于: {{ currentNote.updatedAt | date:'yyyy-MM-dd HH:mm' }}
+      </span>
+      <span>
+        字数: {{ currentNote.content?.length || 0 }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<ng-template #emptyState>
+  <div class="empty-editor">
+    <div class="empty-content">
+      <div class="empty-icon">📝</div>
+      <h3>选择一篇笔记开始编辑</h3>
+      <p>从左侧列表中选择笔记，或创建一篇新笔记</p>
+    </div>
+  </div>
+</ng-template>
