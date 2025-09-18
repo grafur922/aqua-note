@@ -1,11 +1,57 @@
 <div class="noteListMain">
     <div class="toolbar">
-        <div class="sortbtn">
-            <span class="iconfont iconfont-hover icon-list"></span>
+        <div class="search-box">
+            <!-- <input 
+                type="text" 
+                [(ngModel)]="searchKeyword" 
+                (input)="onSearch()"
+                placeholder="搜索笔记..."
+                class="search-input"> -->
+            <div class="sortbtn">
+                <span class="iconfont iconfont-hover icon-list"></span>
+            </div>
         </div>
-        <div class="addnote iconfont-hover">
+        <div class="addnote iconfont-hover" (click)="createNote()">
             <span class="iconfont icon-add"></span>
             <span class="f12">添加</span>
         </div>
+    </div>
+
+    <div class="noteList" *ngIf="!isLoading">
+        <div *ngFor="let note of filteredNotes; trackBy: trackByNoteId" class="note-item"
+            [class.selected]="isNoteSelected(note)" (click)="selectNote(note)">
+
+            <div class="note-header">
+                <h3 class="note-title">{{ note.title || '无标题' }}</h3>
+                <button class="delete-btn" (click)="deleteNote(note, $event)" title="删除笔记">
+                    ×
+                </button>
+            </div>
+
+            <div class="note-preview">
+                {{ getPreviewContent(note.content) }}
+            </div>
+
+            <div class="note-meta">
+                <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
+            </div>
+        </div>
+
+        <div *ngIf="filteredNotes.length === 0 && !isLoading" class="empty-state">
+            <div *ngIf="searchKeyword" class="empty-message">
+                <p>没有找到匹配的笔记</p>
+                <p class="empty-hint">尝试使用其他关键词搜索</p>
+            </div>
+            <div *ngIf="!searchKeyword" class="empty-message">
+                <p>还没有笔记</p>
+                <p class="empty-hint">点击"添加"按钮创建你的第一篇笔记</p>
+            </div>
+        </div>
+    </div>
+
+
+    <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>加载中...</p>
     </div>
 </div>
