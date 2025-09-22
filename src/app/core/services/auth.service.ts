@@ -28,9 +28,7 @@ export class AuthService {
     this.checkStoredAuth();
   }
 
-  /**
-   * 检查本地存储的认证状态
-   */
+
   private checkStoredAuth(): void {
     const token = localStorage.getItem('auth_token');
     const userStr = localStorage.getItem('current_user');
@@ -47,9 +45,7 @@ export class AuthService {
     }
   }
 
-  /**
-   * 用户登录
-   */
+
   login(loginCredentials: LoginCredentials): Observable<boolean> {
     return this.http.post<ApiResponse<LoginInfo>>('/api/user/login', loginCredentials).pipe(
       map(res => {
@@ -59,9 +55,6 @@ export class AuthService {
             email: res.data.email,
             name: res.data.userName
           };
-
-          // Assuming a token is part of the response or handled elsewhere.
-          // For now, using a mock token as in the original commented-out code.
           localStorage.setItem('auth_token', 'mock_token_' + Date.now());
           localStorage.setItem('current_user', JSON.stringify(user));
 
@@ -76,14 +69,12 @@ export class AuthService {
       }),
       catchError(err => {
         console.error('Login request failed:', err);
-        return of(false); // Return an observable of false on error
+        return of(false);
       })
     );
   }
 
-  /**
-   * 用户登出
-   */
+
   logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('current_user');
@@ -91,41 +82,29 @@ export class AuthService {
     this.isAuthenticatedSubject.next(false);
   }
 
-  /**
-   * 获取当前用户
-   */
+
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
-  /**
-   * 检查是否已认证
-   */
+
   isAuthenticated(): boolean {
     return this.isAuthenticatedSubject.value;
   }
 
-  /**
-   * 获取认证令牌
-   */
   getToken(): string | null {
     return localStorage.getItem('auth_token');
   }
 
-  /**
-   * 检查用户是否有特定权限
-   */
+
   hasPermission(permission: string): boolean {
-    // 这里可以实现更复杂的权限逻辑
+
     const user = this.getCurrentUser();
     return user !== null;
   }
 
-  /**
-   * 检查用户角色
-   */
+
   hasRole(role: string): boolean {
-    // 这里可以实现角色检查逻辑
     const user = this.getCurrentUser();
     return user !== null;
   }
