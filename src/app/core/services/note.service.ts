@@ -12,7 +12,7 @@ export class NoteService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   
-  // 本地笔记缓存
+
   private notesSubject = new BehaviorSubject<Note[]>([]);
   public notes$ = this.notesSubject.asObservable();
   
@@ -25,9 +25,6 @@ export class NoteService {
 
   constructor() { }
 
-  /**
-   * 获取HTTP请求头，包含用户ID
-   */
   private getHeaders(): HttpHeaders {
     const user = this.authService.getCurrentUser();
     return new HttpHeaders({
@@ -36,9 +33,7 @@ export class NoteService {
     });
   }
 
-  /**
-   * 获取用户所有笔记
-   */
+
   getNotes(): Observable<Note[]> {
     return this.http.get<ApiResponse<Note[]>>('/api/notes', { 
       headers: this.getHeaders() 
@@ -57,9 +52,6 @@ export class NoteService {
     );
   }
 
-  /**
-   * 获取单个笔记
-   */
   getNote(noteId: string): Observable<Note | null> {
     return this.http.get<ApiResponse<Note>>(`/api/notes/${noteId}`, {
       headers: this.getHeaders()
@@ -78,9 +70,6 @@ export class NoteService {
     );
   }
 
-  /**
-   * 搜索笔记
-   */
   searchNotes(keyword: string): Observable<Note[]> {
     return this.http.get<ApiResponse<Note[]>>(`/api/notes/search?keyword=${encodeURIComponent(keyword)}`, {
       headers: this.getHeaders()
@@ -98,9 +87,6 @@ export class NoteService {
     );
   }
 
-  /**
-   * 删除笔记（软删除）
-   */
   deleteNote(noteId: string): Observable<boolean> {
     return this.http.delete<ApiResponse<any>>(`/api/notes/${noteId}`, {
       headers: this.getHeaders()
@@ -112,7 +98,6 @@ export class NoteService {
           const updatedNotes = currentNotes.filter(note => note.noteId !== noteId);
           this.notesSubject.next(updatedNotes);
           
-          // 如果删除的是当前笔记，清空当前笔记
           if (this.currentNoteSubject.value?.noteId === noteId) {
             this.currentNoteSubject.next(null);
           }
@@ -128,9 +113,7 @@ export class NoteService {
     );
   }
 
-  /**
-   * 同步笔记
-   */
+  //同步笔记
   syncNotes(localChanges: Note[] = []): Observable<SyncResponse | null> {
     const syncRequest: SyncRequest = {
       lastSyncVersion: this.lastSyncVersion,
@@ -148,9 +131,7 @@ export class NoteService {
       }),
       tap(response => {
         if (response.success) {
-          // 更新同步版本号
           this.lastSyncVersion = response.currentSyncVersion;
-          
           // 合并服务器变更到本地
           if (response.serverChanges.length > 0) {
             this.mergeServerChanges(response.serverChanges);
@@ -164,9 +145,7 @@ export class NoteService {
     );
   }
 
-  /**
-   * 合并服务器变更到本地
-   */
+
   private mergeServerChanges(serverChanges: Note[]): void {
     const currentNotes = this.notesSubject.value;
     const updatedNotes = [...currentNotes];
@@ -178,7 +157,6 @@ export class NoteService {
         // 更新现有笔记
         updatedNotes[existingIndex] = serverNote;
       } else {
-        // 添加新笔记
         updatedNotes.push(serverNote);
       }
     });
@@ -186,16 +164,10 @@ export class NoteService {
     this.notesSubject.next(updatedNotes);
   }
 
-  /**
-   * 设置当前笔记
-   */
   setCurrentNote(note: Note | null): void {
     this.currentNoteSubject.next(note);
   }
 
-  /**
-   * 创建新笔记
-   */
   createNote(title: string = '新笔记', content: string = ''): Note {
     const newNote: Note = {
       noteId: this.generateUUID(),
@@ -209,19 +181,16 @@ export class NoteService {
       userId: this.authService.getCurrentUser()?.id
     };
 
-    // 添加到本地缓存
+
     const currentNotes = this.notesSubject.value;
     this.notesSubject.next([newNote, ...currentNotes]);
-    
-    // 设置为当前笔记
+  
     this.setCurrentNote(newNote);
 
     return newNote;
   }
 
-  /**
-   * 更新笔记
-   */
+
   updateNote(updatedNote: Note): void {
     const currentNotes = this.notesSubject.value;
     const noteIndex = currentNotes.findIndex(note => note.noteId === updatedNote.noteId);
@@ -242,9 +211,7 @@ export class NoteService {
     }
   }
 
-  /**
-   * 生成UUID
-   */
+
   private generateUUID(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       const r = Math.random() * 16 | 0;

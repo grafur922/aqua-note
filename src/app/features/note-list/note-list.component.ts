@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
 import { Note } from '../../shared/models/note.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-note-list',
@@ -20,6 +21,7 @@ export class NoteListComponent implements OnInit, OnDestroy {
   searchKeyword: string = '';
   selectedNote: Note | null = null;
   isLoading: boolean = false;
+  router=inject(Router);
 
   ngOnInit(): void {
     this.loadNotes();
@@ -32,7 +34,12 @@ export class NoteListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-
+  refreshNotes(): void {
+    console.log(this.router.url);
+    
+    this.loadNotes();
+  }
+  
   loadNotes(): void {
     this.isLoading = true;
     this.noteService.getNotes()
