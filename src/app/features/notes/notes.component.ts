@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -9,13 +9,15 @@ import { Note } from '../../shared/models/note.model';
   selector: 'app-notes',
   imports: [CommonModule, FormsModule],
   templateUrl: './notes.component.html',
-  styleUrl: './notes.component.less'
+  styleUrl: './notes.component.less',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NotesComponent implements OnInit, OnDestroy {
   private noteService = inject(NoteService);
   private destroy$ = new Subject<void>();
   private titleChange$ = new Subject<string>();
   private contentChange$ = new Subject<string>();
+  private cdr = inject(ChangeDetectorRef);
   
   currentNote: Note | null = null;
   isEditing: boolean = false;
@@ -39,6 +41,7 @@ export class NotesComponent implements OnInit, OnDestroy {
       .subscribe(note => {
         this.currentNote = note;
         this.isEditing = !!note;
+        this.cdr.markForCheck();
       });
   }
 
@@ -75,6 +78,7 @@ export class NotesComponent implements OnInit, OnDestroy {
     if (this.currentNote) {
       this.currentNote.title = title;
       this.titleChange$.next(title);
+      this.cdr.markForCheck();
     }
   }
 
@@ -83,6 +87,7 @@ export class NotesComponent implements OnInit, OnDestroy {
     if (this.currentNote) {
       this.currentNote.content = content;
       this.contentChange$.next(content);
+      this.cdr.markForCheck();
     }
   }
 
@@ -95,10 +100,11 @@ export class NotesComponent implements OnInit, OnDestroy {
     this.noteService.updateNote(this.currentNote);
     
 
-    setTimeout(() => {
+    // setTimeout(() => {
       this.isSaving = false;
       this.lastSaved = new Date();
-    }, 500);
+      this.cdr.markForCheck();
+    // }, 500);
   }
 
 
@@ -117,6 +123,7 @@ export class NotesComponent implements OnInit, OnDestroy {
           if (response?.success) {
             console.log('同步成功');
             this.lastSaved = new Date();
+            this.cdr.markForCheck();
           } else {
             console.error('同步失败:', response?.message);
           }
@@ -183,9 +190,10 @@ export class NotesComponent implements OnInit, OnDestroy {
     this.onContentChange(this.currentNote.content);
     
     // 重新设置光标位置
-    setTimeout(() => {
+    // setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + newText.length, start + newText.length);
-    });
+      this.cdr.markForCheck();
+    // });
   }
 }

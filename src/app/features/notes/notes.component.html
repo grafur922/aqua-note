@@ -1,4 +1,5 @@
-<div class="notes-editor" *ngIf="isEditing && currentNote; else emptyState">
+@if(isEditing && currentNote){
+<div class="notes-editor">
   <div class="editor-toolbar">
     <div class="toolbar-left">
       <button class="format-btn" (click)="insertFormat('bold')" title="粗体">
@@ -14,11 +15,15 @@
         ≡
       </button>
     </div>
-    
+
     <div class="toolbar-right">
-      <span class="save-status" *ngIf="isSaving">保存中...</span>
-      <span class="save-status" *ngIf="!isSaving && lastSaved">{{ getLastSavedText() }}</span>
-      
+      @if(isSaving){
+      <span class="save-status">保存中...</span>
+      }
+      @else if(!isSaving && lastSaved){
+      <span class="save-status">{{ getLastSavedText() }}</span>
+      }
+
       <button class="action-btn" (click)="manualSave()" [disabled]="isSaving" title="手动保存">
         保存
       </button>
@@ -30,48 +35,59 @@
 
 
   <div class="note-title-container">
-    <input 
-      type="text" 
-      class="note-title-input"
-      [(ngModel)]="currentNote.title"
-      (input)="onTitleChange(currentNote.title)"
-      placeholder="笔记标题..."
-      maxlength="100">
+    <input type="text" class="note-title-input" [(ngModel)]="currentNote.title"
+      (input)="onTitleChange(currentNote.title)" placeholder="笔记标题..." maxlength="100">
   </div>
-
+  <!-- <div class="divide"></div> -->
 
   <div class="note-content-container">
-    <textarea 
-      class="note-content"
-      [(ngModel)]="currentNote.content"
-      (input)="onContentChange(currentNote.content)"
-      placeholder="开始写下你的想法..."
-      rows="20">
-    </textarea>
+    <textarea class="note-content" [(ngModel)]="currentNote.content" (input)="onContentChange(currentNote.content)"
+      placeholder="开始写下你的想法..." rows="20">
+      </textarea>
   </div>
 
 
   <div class="note-info">
     <div class="note-meta">
-      <span *ngIf="currentNote.createdAt">
+      @if(currentNote.createdAt){
+      <span>
         创建于: {{ currentNote.createdAt | date:'yyyy-MM-dd HH:mm' }}
       </span>
-      <span *ngIf="currentNote.updatedAt">
+      }
+      @if(currentNote.updatedAt){
+      <span>
         更新于: {{ currentNote.updatedAt | date:'yyyy-MM-dd HH:mm' }}
       </span>
+      }
+
       <span>
         字数: {{ currentNote.content?.length || 0 }}
       </span>
     </div>
   </div>
 </div>
+}
+@else{
+<div class="empty-editor">
+  <div class="empty-content">
+    <!-- <div class="empty-icon">📝</div> -->
+    <div class="img-container">
+      <img src="../../../assets/images/home/notes.svg" class="noteImg" alt="">
+    </div>
+    <h3>选择一篇笔记开始编辑</h3>
+    <p>从左侧列表中选择笔记，或创建一篇新笔记</p>
+  </div>
+</div>
+}
 
-<ng-template #emptyState>
+<!-- <ng-template #emptyState>
   <div class="empty-editor">
     <div class="empty-content">
-      <div class="empty-icon">📝</div>
+       <div class="img-container">
+        <img src="../../../assets/images/home/notes.svg" class="noteImg" alt="">
+       </div>
       <h3>选择一篇笔记开始编辑</h3>
       <p>从左侧列表中选择笔记，或创建一篇新笔记</p>
     </div>
   </div>
-</ng-template>
+</ng-template> -->
