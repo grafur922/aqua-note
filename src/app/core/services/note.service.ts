@@ -40,6 +40,7 @@ export class NoteService {
     }).pipe(
       map(response => {
         if (response.code === 200 && response.data) {
+          console.log(response.data);
           this.notesSubject.next(response.data);
           return response.data;
         }
@@ -197,7 +198,7 @@ export class NoteService {
     
     if (noteIndex >= 0) {
       updatedNote.updatedAt = new Date().toISOString();
-      updatedNote.syncVersion += 1;
+      // updatedNote.syncVersion += 1;
       
       const updatedNotes = [...currentNotes];
       updatedNotes[noteIndex] = updatedNote;
