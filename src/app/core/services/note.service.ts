@@ -40,7 +40,7 @@ export class NoteService {
     }).pipe(
       map(response => {
         if (response.code === 200 && response.data) {
-          console.log(response.data);
+          // console.log(response.data);
           this.notesSubject.next(response.data);
           return response.data;
         }

@@ -45,12 +45,10 @@ export class NotesComponent implements OnInit, OnDestroy {
       });
   }
 
-
   private setupAutoSave(): void {
-
     this.titleChange$
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntil(this.destroy$), 
         debounceTime(1000),
         distinctUntilChanged()
       )
@@ -155,6 +153,10 @@ export class NotesComponent implements OnInit, OnDestroy {
     }
   }
 
+  changeTitle(){
+    console.log(this.currentNote?.content.split('\n')[0]);
+    
+  }
 
   insertFormat(format: string): void {
     const textarea = document.querySelector('.note-content') as HTMLTextAreaElement;
