@@ -5,12 +5,17 @@ import { Subject, takeUntil } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
 import { Note } from '../../shared/models/note.model';
 import { Router } from '@angular/router';
+import { contextMenu } from '../../shared/models/contextMenu.model';
+import { ContextMenuComponent } from "../../shared/components/context-menu/context-menu.component";
 
 @Component({
   selector: 'app-note-list',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ContextMenuComponent],
   templateUrl: './note-list.component.html',
-  styleUrl: './note-list.component.less'
+  styleUrl: './note-list.component.less',
+  host: {
+    '(document:click)': 'onDocumentClick()'
+  }
 })
 export class NoteListComponent implements OnInit, OnDestroy {
   private noteService = inject(NoteService);
@@ -22,6 +27,55 @@ export class NoteListComponent implements OnInit, OnDestroy {
   selectedNote: Note | null = null;
   isLoading: boolean = false;
   router=inject(Router);
+  menuProps: contextMenu[] = [
+    {
+      title: '置顶',
+      icon: 'icon-pin',
+      operation: (context) => {
+        const note = context as Note | null;
+        if (!note) {
+          return;
+        }
+        console.log('置顶', note);
+      }
+    },
+    {
+      title: '重命名',
+      icon: 'icon-rename',
+      operation: (context) => {
+        const note = context as Note | null;
+        if (!note) {
+          return;
+        }
+        console.log('重命名', note);
+      }
+    },
+    {
+      title: '删除',
+      icon: 'icon-delete',
+      operation: (context) => {
+        const note = context as Note | null;
+        if (!note) {
+          return;
+        }
+        console.log('删除', note);
+      }
+    },
+    {
+      title: '复制',
+      icon: 'icon-copy',
+      operation: (context) => {
+        const note = context as Note | null;
+        if (!note) {
+          return;
+        }
+        console.log('复制', note);
+      }
+    }
+  ];
+  menuVisible = false;
+  menuPosition = { x: 0, y: 0 };
+  menuContext: Note | null = null;
 
   ngOnInit(): void {
     this.loadNotes();
@@ -35,7 +89,7 @@ export class NoteListComponent implements OnInit, OnDestroy {
   }
 
   refreshNotes(): void {
-    console.log(this.router.url);
+    console.log(this.filteredNotes);
     
     this.loadNotes();
   }
@@ -147,15 +201,54 @@ export class NoteListComponent implements OnInit, OnDestroy {
     }
   }
 
-
   getPreviewContent(content: string): string {
     const maxLength = 100;
-    const plainText = content.replace(/<[^>]*>/g, ''); // 移除HTML标签
+    const plainText = content.replace(/<[^>]*>/g, ''); 
     return plainText.length > maxLength 
       ? plainText.substring(0, maxLength) + '...' 
       : plainText;
   }
 
+  showNoteMenu(event: MouseEvent, note: Note): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const menuWidth = 220;
+    const menuHeight = this.menuProps.length * 40;
+
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + menuWidth > viewportWidth) {
+      x = Math.max(0, viewportWidth - menuWidth - 12);
+    }
+
+    if (y + menuHeight > viewportHeight) {
+      y = Math.max(0, viewportHeight - menuHeight - 12);
+    }
+
+    this.menuContext = note;
+    this.menuPosition = { x, y };
+    this.menuVisible = true;
+  }
+
+  onMenuItemSelected(): void {
+    this.hideContextMenu();
+  }
+
+  hideContextMenu(): void {
+    if (!this.menuVisible) {
+      return;
+    }
+    this.menuVisible = false;
+    this.menuContext = null;
+  }
+
+  onDocumentClick(): void {
+    this.hideContextMenu();
+  }
 
   isNoteSelected(note: Note): boolean {
     return this.selectedNote?.noteId === note.noteId;

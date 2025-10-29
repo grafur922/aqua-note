@@ -11,7 +11,7 @@
       <button class="format-btn" (click)="insertFormat('code')" title="代码">
         &lt;/&gt;
       </button>
-      <button class="format-btn" (click)="insertFormat('list')" title="列表">
+      <button class="format-btn" (click)="changeTitle()" title="调整标题">
         ≡
       </button>
     </div>
@@ -61,7 +61,7 @@
       }
 
       <span>
-        字数: {{ currentNote.content?.length || 0 }}
+        字数: {{ currentNote.content.length || 0 }}
       </span>
     </div>
   </div>
