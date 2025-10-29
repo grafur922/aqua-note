@@ -28,7 +28,7 @@
     @else{
         <div class="noteList">
             @for(note of filteredNotes; track note.noteId){
-                <div class="note-item"
+                <div class="note-item" (contextmenu)="showNoteMenu($event, note)"
                 [class.selected]="isNoteSelected(note)" (click)="selectNote(note)">
                 
                     <div class="note-header">
@@ -45,9 +45,7 @@
                     <div class="note-meta">
                         <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
                     </div>
-                
-                
-            </div>
+                </div>
             }
             
             @if(filteredNotes.length === 0 && !isLoading){
@@ -64,10 +62,15 @@
                             <p class="empty-hint">点击"添加"按钮创建你的第一篇笔记</p>
                         </div>
                     }
-                    
                 </div>
             }
-            
         </div>
     }
 </div>
+<app-context-menu
+    [menuProps]="menuProps"
+    [visible]="menuVisible"
+    [position]="menuPosition"
+    [context]="menuContext"
+    (itemSelected)="onMenuItemSelected()"
+></app-context-menu>
