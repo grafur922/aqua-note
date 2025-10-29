@@ -6,6 +6,27 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "44028019",
+      "name": "copy",
+      "font_class": "copy",
+      "unicode": "e644",
+      "unicode_decimal": 58948
+    },
+    {
+      "icon_id": "44028574",
+      "name": "pin",
+      "font_class": "pin",
+      "unicode": "e6bc",
+      "unicode_decimal": 59068
+    },
+    {
+      "icon_id": "44028641",
+      "name": "rename",
+      "font_class": "rename",
+      "unicode": "e6cf",
+      "unicode_decimal": 59087
+    },
+    {
       "icon_id": "44028058",
       "name": "delete",
       "font_class": "delete",
