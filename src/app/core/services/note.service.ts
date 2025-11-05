@@ -35,8 +35,8 @@ export class NoteService {
 
 
   getNotes(): Observable<Note[]> {
-    return this.http.get<ApiResponse<Note[]>>('/api/notes', { 
-      headers: this.getHeaders() 
+    return this.http.post<ApiResponse<Note[]>>('/api/notes',{tagId:null}, { 
+      headers: this.getHeaders()
     }).pipe(
       map(response => {
         if (response.code === 200 && response.data) {

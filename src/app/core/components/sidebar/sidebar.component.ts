@@ -10,10 +10,8 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent {
-  
   router = inject(Router);
   cdr = inject(ChangeDetectorRef);
-
   navigateTo(route: string): void {
     this.router.navigate(['/home', route]);
   }
