@@ -1,0 +1,31 @@
+<div #dropdownRef class="tag-dropdown tag-dropdown--md" [class.is-open]="open" [class.is-disabled]="disabled">
+  <button class="tag-dropdown__trigger" (click)="toggle()">
+    <span class="tag-dropdown__label">{{ currentTagName || '标签' }}</span>
+    <span class="tag-dropdown__caret tag-dropdown__caret--fallback"></span>
+  </button>
+
+  @if(open){
+  <div class="tag-dropdown__menu">
+    <!-- <div class="tag-dropdown__item" (click)="$event.stopPropagation()">
+      <input #tagInput type="text" class="tag-dropdown__input" placeholder="新标签..." (keydown.enter)="addTagFromInput(tagInput)" />
+      <button type="button" class="tag-dropdown__add-btn" (click)="addTagFromInput(tagInput)">添加</button>
+    </div> -->
+    <!-- <div class="tag-dropdown__item is-loading" *ngIf="loading">加载中...</div>
+    <div class="tag-dropdown__empty" *ngIf="!loading && (!tags || !tags.length)">暂无标签</div> -->
+    <div class="tag-dropdown__title"
+      title="标签">
+      <span class="tag-dropdown__title-text">标签</span>
+      <span class="iconfont iconfont-hover icon-add note-list-icon"></span>
+      <!-- <i class="iconfont icon-checkmark tag-dropdown__check" *ngIf="tag.tagId === currentTagId"></i> -->
+    </div>
+    @for(tag of tags$ | async; track tag.tagId){
+    <div class="tag-dropdown__item" [class.is-active]="tag.tagId === currentTagId" (click)="select(tag)"
+      title="{{ tag.tagName }}">
+      <span class="tag-dropdown__item-text">{{ tag.tagName }}</span>
+      <!-- <i class="iconfont icon-checkmark tag-dropdown__check" *ngIf="tag.tagId === currentTagId"></i> -->
+    </div>
+    }
+
+  </div>
+  }
+</div>

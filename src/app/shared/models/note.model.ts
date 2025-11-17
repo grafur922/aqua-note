@@ -34,3 +34,8 @@ export interface ConflictInfo {
     clientVersion: Note;
     conflictReason: string;
 }
+
+export interface Tag {
+    tagId: string;
+    tagName: string;
+}

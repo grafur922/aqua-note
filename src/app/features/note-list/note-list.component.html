@@ -1,5 +1,8 @@
 <div class="noteListMain">
     <div class="toolbar">
+        <div class="tag">
+        <app-tag-dropdown></app-tag-dropdown>
+    </div>
         <div class="icon-box">
             <!-- <input 
                 type="text" 
@@ -13,12 +16,16 @@
             <div class="refresh" title="刷新" (click)="refreshNotes()">
                 <span class="iconfont iconfont-hover icon-arrow_counterclockwise note-list-icon"></span>
             </div>
+            <div class="add" title="新建笔记" (click)="createNote()">
+                <span class="iconfont iconfont-hover icon-add note-list-icon"></span>
+            </div>
         </div>
-        <div class="addnote iconfont-hover" (click)="createNote()">
+        <!-- <div class="addnote iconfont-hover" (click)="createNote()">
             <span class="iconfont icon-add"></span>
             <span class="f12">添加</span>
-        </div>
+        </div> -->
     </div>
+    
     @if(isLoading){
         <div class="loading-state">
             <div class="loading-spinner"></div>
