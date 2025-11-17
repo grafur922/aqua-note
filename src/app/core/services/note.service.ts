@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
-import { Note, SyncRequest, SyncResponse, ApiResponse } from '../../shared/models/note.model';
+import { Note, SyncRequest, SyncResponse, ApiResponse,Tag } from '../../shared/models/note.model';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -23,7 +23,15 @@ export class NoteService {
   // 同步版本号
   private lastSyncVersion = 0;
 
-  constructor() { }
+
+  private tagsSubject = new BehaviorSubject<Tag[]>([]);
+  public tags$ = this.tagsSubject.asObservable();
+
+  constructor() { 
+    this.tags$.subscribe(tags => {
+      console.log(tags);
+    });
+  }
 
   private getHeaders(): HttpHeaders {
     const user = this.authService.getCurrentUser();
@@ -146,6 +154,23 @@ export class NoteService {
     );
   }
 
+  getTags(): Observable<Tag[]> {
+    return this.http.get<ApiResponse<Tag[]>>(`/api/notes/tags`, {
+      headers: this.getHeaders()
+    }).pipe(
+      map(response => {
+        if (response.code === 200 && response.data) {
+          this.tagsSubject.next(response.data);
+          return response.data;
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('获取标签失败:', error);
+        return of([]);
+      })
+    );
+  }
 
   private mergeServerChanges(serverChanges: Note[]): void {
     const currentNotes = this.notesSubject.value;

@@ -3,14 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
-import { Note } from '../../shared/models/note.model';
+import { Note,Tag } from '../../shared/models/note.model';
 import { Router } from '@angular/router';
 import { contextMenu } from '../../shared/models/contextMenu.model';
 import { ContextMenuComponent } from "../../shared/components/context-menu/context-menu.component";
+import { TagDropdownComponent } from '../tag-dropdown/tag-dropdown.component';
 
 @Component({
   selector: 'app-note-list',
-  imports: [CommonModule, FormsModule, ContextMenuComponent],
+  imports: [CommonModule, FormsModule, ContextMenuComponent, TagDropdownComponent],
   templateUrl: './note-list.component.html',
   styleUrl: './note-list.component.less',
   host: {
@@ -81,6 +82,7 @@ export class NoteListComponent implements OnInit, OnDestroy {
     this.loadNotes();
     this.subscribeToNotes();
     this.subscribeToCurrentNote();
+    this.loadTags();
   }
 
   ngOnDestroy(): void {
@@ -92,6 +94,20 @@ export class NoteListComponent implements OnInit, OnDestroy {
     console.log(this.filteredNotes);
     
     this.loadNotes();
+  }
+  
+  tags: Tag[] = [];
+  loadTags(): void {
+    this.noteService.getTags()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (tags) => {
+          this.tags = tags;
+        },
+        error: (error) => {
+          console.error('加载标签失败:', error);
+        }
+      });
   }
   
   loadNotes(): void {
@@ -254,8 +270,4 @@ export class NoteListComponent implements OnInit, OnDestroy {
     return this.selectedNote?.noteId === note.noteId;
   }
 
-//待优化
-  trackByNoteId(index: number, note: Note): string {
-    return note.noteId;
-  }
 }
