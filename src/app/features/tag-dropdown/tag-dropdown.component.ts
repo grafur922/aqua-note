@@ -12,7 +12,7 @@ import { NoteService } from '../../core/services/note.service';
 export class TagDropdownComponent {
   open = false;
   disabled = false;
-  currentTagName = '新建标签';
+  currentTagName = '标签';
   tags$=inject(NoteService).tags$
   dropdown=viewChild<ElementRef<HTMLElement>>('dropdownRef')
   currentTagId: string | null = null;
