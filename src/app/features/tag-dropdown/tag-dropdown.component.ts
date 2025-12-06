@@ -11,14 +11,41 @@ import { NoteService } from '../../core/services/note.service';
 })
 export class TagDropdownComponent {
   open = false;
+  tagActive = false;
+  private isMousedownOutside = false;
   disabled = false;
   currentTagName = '标签';
-  tags$=inject(NoteService).tags$
-  dropdown=viewChild<ElementRef<HTMLElement>>('dropdownRef')
+  tags$ = inject(NoteService).tags$
+  dropdown = viewChild<ElementRef<HTMLElement>>('dropdownRef')
   currentTagId: string | null = null;
   loading = false;
-  toggle(){
+  tagRef = viewChild<ElementRef<HTMLInputElement>>('tagInput')
+
+  toggle() {
     this.open = !this.open;
+    if (this.open === true) {
+      this.tagActive = false
+    }
+  }
+  addTag() {
+    this.tagActive = true
+    setTimeout(() => {
+      this.tagRef()?.nativeElement.focus()
+    }, 0);
+  }
+
+
+  tagConfirm() {
+    //http
+    console.log('confirm');
+    
+    this.tagActive = false;
+  }
+
+  tagCancel(){
+    event?.preventDefault()
+    console.log('cancel')
+    this.tagActive = false;
   }
 
   select(t: { tagId: string; tagName: string }) {
@@ -28,31 +55,30 @@ export class TagDropdownComponent {
   }
 
   addTagFromInput(input: HTMLInputElement) {
-  //   const name = (input.value || '').trim();
-  //   if (!name) return;
-  //   if (this.tags.some(x => x.tagName === name)) { input.value = ''; return; }
-  //   const id = this.tags.length ? Math.max(...this.tags.map(x => x.tagId)) + 1 : 1;
-  //   const t = { tagId: id, tagName: name };
-  //   this.tags = [...this.tags, t];
-  //   this.currentTagId = t.tagId;
-  //   this.currentTagName = t.tagName;
-  //   input.value = '';
+    //   const name = (input.value || '').trim();
+    //   if (!name) return;
+    //   if (this.tags.some(x => x.tagName === name)) { input.value = ''; return; }
+    //   const id = this.tags.length ? Math.max(...this.tags.map(x => x.tagId)) + 1 : 1;
+    //   const t = { tagId: id, tagName: name };
+    //   this.tags = [...this.tags, t];
+    //   this.currentTagId = t.tagId;
+    //   this.currentTagName = t.tagName;
+    //   input.value = '';
   }
 
   deleteTag(t: { id: number; name: string }) {
-  //   this.tags = this.tags.filter(x => x.id !== t.id);
-  //   if (this.currentTagId === t.id) {
-  //     this.currentTagId = null;
-  //     this.currentTagName = '';
-  //   }
+    //   this.tags = this.tags.filter(x => x.id !== t.id);
+    //   if (this.currentTagId === t.id) {
+    //     this.currentTagId = null;
+    //     this.currentTagName = '';
+    //   }
   }
+  constructor(private elementRef: ElementRef) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!this.open) return;
-    const target = event.target as Node;
-    const dropdownEl = this.dropdown()?.nativeElement;
-    if (dropdownEl && dropdownEl.contains(target)) return;
-    this.open = false;
+    if (this.open && !this.elementRef.nativeElement.contains(event.target)) {
+      this.open = false;
+    }
   }
 }

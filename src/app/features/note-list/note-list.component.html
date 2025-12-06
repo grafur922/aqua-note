@@ -35,6 +35,7 @@
     @else{
         <div class="noteList">
             @for(note of filteredNotes; track note.noteId){
+                
                 <div class="note-item" (contextmenu)="showNoteMenu($event, note)"
                 [class.selected]="isNoteSelected(note)" (click)="selectNote(note)">
                 

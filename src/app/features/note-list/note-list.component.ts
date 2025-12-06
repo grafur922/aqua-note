@@ -90,9 +90,13 @@ export class NoteListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  addTag():void{
+    
+  }
+
   refreshNotes(): void {
     console.log(this.filteredNotes);
-    
+    this.loadTags();
     this.loadNotes();
   }
   
