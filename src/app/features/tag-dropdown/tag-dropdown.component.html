@@ -12,12 +12,17 @@
     </div> -->
     <!-- <div class="tag-dropdown__item is-loading" *ngIf="loading">加载中...</div>
     <div class="tag-dropdown__empty" *ngIf="!loading && (!tags || !tags.length)">暂无标签</div> -->
-    <div class="tag-dropdown__title"
-      title="标签">
+    <div class="tag-dropdown__title" title="新标签">
       <span class="tag-dropdown__title-text">标签</span>
-      <span class="iconfont iconfont-hover icon-add note-list-icon"></span>
+      <span class="iconfont iconfont-hover icon-add note-list-icon" (click)="addTag()"></span>
       <!-- <i class="iconfont icon-checkmark tag-dropdown__check" *ngIf="tag.tagId === currentTagId"></i> -->
     </div>
+    @if(tagActive){
+      <div class="tag-dropdown__inputgroup">
+        <input type="text" class="tag-dropdown__inputgroup-add" #tagInput (blur)="tagConfirm()" (keyup.esc)="tagCancel()">
+        <span class="iconfont icon-checkmark tag-dropdown__inputgroup-add-confirm iconfont-hover" title="enter"></span>
+      </div>
+    }
     @for(tag of tags$ | async; track tag.tagId){
     <div class="tag-dropdown__item" [class.is-active]="tag.tagId === currentTagId" (click)="select(tag)"
       title="{{ tag.tagName }}">
