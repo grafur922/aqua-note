@@ -1,6 +1,6 @@
 @if(isEditing && currentNote){
 <div class="notes-editor">
-  <div class="editor-toolbar">
+  <!-- <div class="editor-toolbar">
     <div class="toolbar-left">
       <button class="format-btn" (click)="insertFormat('bold')" title="粗体">
         <strong>B</strong>
@@ -31,19 +31,20 @@
         同步
       </button>
     </div>
-  </div>
+  </div> -->
 
 
-  <div class="note-title-container">
+  <!-- <div class="note-title-container">
     <input type="text" class="note-title-input" [(ngModel)]="currentNote.title"
       (input)="onTitleChange(currentNote.title)" placeholder="笔记标题..." maxlength="100">
-  </div>
+  </div> -->
   <!-- <div class="divide"></div> -->
 
   <div class="note-content-container">
-    <textarea class="note-content" [(ngModel)]="currentNote.content" (input)="onContentChange(currentNote.content)"
+    <!-- <textarea class="note-content" [(ngModel)]="currentNote.content" (input)="onContentChange(currentNote.content)"
       placeholder="开始写下你的想法..." rows="20">
-      </textarea>
+      </textarea> -->
+      <div id="editor" #editor></div>
   </div>
 
 

@@ -24,8 +24,8 @@ export class NoteService {
   private lastSyncVersion = 0;
 
 
-  private tagsSubject = new BehaviorSubject<Tag[]>([]);
-  public tags$ = this.tagsSubject.asObservable();
+  private currentTagsSubject = new BehaviorSubject<Tag[]>([]);
+  public tags$ = this.currentTagsSubject.asObservable();
 
   constructor() { 
     this.tags$.subscribe(tags => {
@@ -160,7 +160,8 @@ export class NoteService {
     }).pipe(
       map(response => {
         if (response.code === 200 && response.data) {
-          this.tagsSubject.next(response.data);
+          
+          this.currentTagsSubject.next(response.data);
           return response.data;
         }
         return [];

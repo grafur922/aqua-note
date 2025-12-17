@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { NoteService } from '../../core/services/note.service';
 
 import { RecycleBinComponent } from './recycle-bin.component';
 
@@ -8,7 +10,19 @@ describe('RecycleBinComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RecycleBinComponent]
+      imports: [RecycleBinComponent],
+      providers: [
+        {
+          provide: NoteService,
+          useValue: {
+            notes$: of([]),
+            getNotes: () => of([]),
+            syncNotes: () => of(null),
+            deleteNote: () => of(true),
+            updateNote: () => {}
+          }
+        }
+      ]
     })
     .compileComponents();
 
