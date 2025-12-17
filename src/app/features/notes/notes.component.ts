@@ -1,10 +1,12 @@
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, AfterContentInit, ChangeDetectionStrategy, viewChild, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
 import { Note } from '../../shared/models/note.model';
-
+import { Editor } from '@toast-ui/editor'
+import '@toast-ui/editor/dist/toastui-editor.css'; // Editor's Style
+import '@toast-ui/editor/dist/i18n/zh-cn';
 @Component({
   selector: 'app-notes',
   imports: [CommonModule, FormsModule],
@@ -18,23 +20,55 @@ export class NotesComponent implements OnInit, OnDestroy {
   private titleChange$ = new Subject<string>();
   private contentChange$ = new Subject<string>();
   private cdr = inject(ChangeDetectorRef);
-  
   currentNote: Note | null = null;
   isEditing: boolean = false;
   isSaving: boolean = false;
   lastSaved: Date | null = null;
+  editorRef = viewChild<ElementRef>('editor');
+  editor:typeof Editor;
+
+  constructor() {
+    effect(() => {
+      this.editor = new Editor({
+        el: this.editorRef()?.nativeElement,
+        initialEditType: 'markdown',
+        previewStyle: 'tab',
+        height: 'calc(100% - 45px)',
+        placeholder: '开始写下你的想法...',
+        previewHighlight: true,
+        language: 'zh-CN',
+        events:{
+          change:()=>{
+            const markdown=this.editor.getMarkdown();
+            if(this.currentNote){
+              this.currentNote.content=markdown;
+            }
+            
+            this.onContentChange(markdown);
+          }
+        },
+        initialValue:this.currentNote?.content
+      })
+    })
+  } 
 
   ngOnInit(): void {
     this.subscribeToCurrentNote();
     this.setupAutoSave();
+    this.noteService.currentNote$.subscribe(res=>{
+      // this.editorRef()?.nativeElement.setMarkdown(res?.content)
+      this.editor.setMarkdown(res?.content)
+    })
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-//订阅当前笔记变化
+
+  //订阅当前笔记变化
   private subscribeToCurrentNote(): void {
     this.noteService.currentNote$
       .pipe(takeUntil(this.destroy$))
@@ -48,7 +82,7 @@ export class NotesComponent implements OnInit, OnDestroy {
   private setupAutoSave(): void {
     this.titleChange$
       .pipe(
-        takeUntil(this.destroy$), 
+        takeUntil(this.destroy$),
         debounceTime(1000),
         distinctUntilChanged()
       )
@@ -96,12 +130,12 @@ export class NotesComponent implements OnInit, OnDestroy {
     this.isSaving = true;
 
     this.noteService.updateNote(this.currentNote);
-    
+
 
     // setTimeout(() => {
-      this.isSaving = false;
-      this.lastSaved = new Date();
-      this.cdr.markForCheck();
+    this.isSaving = false;
+    this.lastSaved = new Date();
+    this.cdr.markForCheck();
     // }, 500);
   }
 
@@ -135,27 +169,27 @@ export class NotesComponent implements OnInit, OnDestroy {
 
   getLastSavedText(): string {
     if (!this.lastSaved) return '';
-    
+
     const now = new Date();
     const diffInMs = now.getTime() - this.lastSaved.getTime();
     const diffInSeconds = Math.floor(diffInMs / 1000);
-    
+
     if (diffInSeconds < 60) {
       return '刚刚保存';
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
       return `${minutes}分钟前保存`;
     } else {
-      return this.lastSaved.toLocaleTimeString('zh-CN', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return this.lastSaved.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
       }) + ' 保存';
     }
   }
 
-  changeTitle(){
+  changeTitle() {
     console.log(this.currentNote?.content.split('\n')[0]);
-    
+
   }
 
   insertFormat(format: string): void {
@@ -165,9 +199,9 @@ export class NotesComponent implements OnInit, OnDestroy {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
-    
+
     let newText = '';
-    
+
     switch (format) {
       case 'bold':
         newText = `**${selectedText || '粗体文本'}**`;
@@ -184,18 +218,18 @@ export class NotesComponent implements OnInit, OnDestroy {
       default:
         return;
     }
-    
+
     const before = textarea.value.substring(0, start);
     const after = textarea.value.substring(end);
-    
+
     this.currentNote.content = before + newText + after;
     this.onContentChange(this.currentNote.content);
-    
+
     // 重新设置光标位置
     // setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + newText.length, start + newText.length);
-      this.cdr.markForCheck();
+    textarea.focus();
+    textarea.setSelectionRange(start + newText.length, start + newText.length);
+    this.cdr.markForCheck();
     // });
   }
 }
