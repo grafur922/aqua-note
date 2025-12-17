@@ -4,7 +4,6 @@ import { NoteService } from '../../core/services/note.service';
 
 @Component({
   selector: 'app-tag-dropdown',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './tag-dropdown.component.html',
   styleUrl: './tag-dropdown.component.less'

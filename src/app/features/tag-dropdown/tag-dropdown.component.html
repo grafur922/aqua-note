@@ -23,6 +23,7 @@
         <span class="iconfont icon-checkmark tag-dropdown__inputgroup-add-confirm iconfont-hover" title="enter"></span>
       </div>
     }
+    
     @for(tag of tags$ | async; track tag.tagId){
     <div class="tag-dropdown__item" [class.is-active]="tag.tagId === currentTagId" (click)="select(tag)"
       title="{{ tag.tagName }}">

@@ -1,9 +1,68 @@
-<div class="recycle-bin-container">
-    <div class="header">
-        <h2>回收站</h2>
-        <button class="clear-all-btn">清空回收站</button>
+<div class="recycleBinMain">
+    <div class="toolbar">
+        <div class="title">
+            <span class="iconfont icon-delete title-icon"></span>
+            <span class="text">回收站</span>
+            @if(deletedNotes.length > 0){
+                <span class="count">{{ deletedNotes.length }}</span>
+            }
+        </div>
+
+        <div class="icon-box">
+            <div class="refresh" title="刷新" (click)="refresh()">
+                <span class="iconfont iconfont-hover icon-arrow_counterclockwise recycle-icon"></span>
+            </div>
+            <button class="clear-all-btn" (click)="clearAll()" [disabled]="deletedNotes.length === 0 || isClearing">
+                @if(isClearing){
+                    清空中...
+                }
+                @else{
+                    清空回收站
+                }
+            </button>
+        </div>
     </div>
-    <div class="recycle-content">
-        <p>回收站功能正在开发中...</p>
-    </div>
+
+    @if(isLoading){
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>加载中...</p>
+        </div>
+    }
+    @else{
+        <div class="recycleList">
+            @for(note of deletedNotes; track note.noteId){
+                <div class="note-item">
+                    <div class="note-header">
+                        <h3 class="note-title">{{ note.title || '无标题' }}</h3>
+                        <div class="note-actions">
+                            <button class="icon-action restore" title="恢复" (click)="restoreNote(note, $event)">
+                                <span class="iconfont icon-arrow_counterclockwise"></span>
+                            </button>
+                            <button class="icon-action delete" title="永久删除" (click)="permanentlyDeleteNote(note, $event)">
+                                <span class="iconfont icon-delete"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="note-preview">
+                        {{ getPreviewContent(note.content) }}
+                    </div>
+
+                    <div class="note-meta">
+                        <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
+                    </div>
+                </div>
+            }
+
+            @if(deletedNotes.length === 0){
+                <div class="empty-state">
+                    <div class="empty-message">
+                        <p>回收站为空</p>
+                        <p class="empty-hint">删除的笔记会显示在这里</p>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
