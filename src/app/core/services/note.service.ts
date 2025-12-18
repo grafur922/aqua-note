@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
-import { Note, SyncRequest, SyncResponse, ApiResponse,Tag } from '../../shared/models/note.model';
+import { Note, SyncRequest, SyncResponse, ApiResponse, Tag, ALL_TAG_ID, ALL_TAG_NAME } from '../../shared/models/note.model';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -27,25 +27,36 @@ export class NoteService {
   private currentTagsSubject = new BehaviorSubject<Tag[]>([]);
   public tags$ = this.currentTagsSubject.asObservable();
 
+  private selectedTagIdSubject = new BehaviorSubject<string | null>(null);
+  public selectedTagId$ = this.selectedTagIdSubject.asObservable();
+
+  private searchKeywordSubject = new BehaviorSubject<string>('');
+  public searchKeyword$ = this.searchKeywordSubject.asObservable();
+
   constructor() { 
     this.tags$.subscribe(tags => {
       console.log(tags);
     });
   }
 
-  private getHeaders(): HttpHeaders {
-    const user = this.authService.getCurrentUser();
-    return new HttpHeaders({
-      'User-Id': user?.id || '',
-      'Content-Type': 'application/json'
-    });
+  setSelectedTagId(tagId: string | null): void {
+    this.selectedTagIdSubject.next(tagId);
   }
 
+  getSelectedTagId(): string | null {
+    return this.selectedTagIdSubject.value;
+  }
 
-  getNotes(): Observable<Note[]> {
-    return this.http.post<ApiResponse<Note[]>>('/api/notes',{tagId:null}, { 
-      headers: this.getHeaders()
-    }).pipe(
+  setSearchKeyword(keyword: string): void {
+    this.searchKeywordSubject.next(keyword);
+  }
+
+  getSearchKeyword(): string {
+    return this.searchKeywordSubject.value;
+  }
+
+  getNotes(tagId: string | null = null): Observable<Note[]> {
+    return this.http.post<ApiResponse<Note[]>>('/api/notes', { tagId }).pipe(
       map(response => {
         if (response.code === 200 && response.data) {
           // console.log(response.data);
@@ -62,9 +73,7 @@ export class NoteService {
   }
 
   getNote(noteId: string): Observable<Note | null> {
-    return this.http.get<ApiResponse<Note>>(`/api/notes/${noteId}`, {
-      headers: this.getHeaders()
-    }).pipe(
+    return this.http.get<ApiResponse<Note>>(`/api/notes/${noteId}`).pipe(
       map(response => {
         if (response.code === 200 && response.data) {
           this.currentNoteSubject.next(response.data);
@@ -80,9 +89,7 @@ export class NoteService {
   }
 
   searchNotes(keyword: string): Observable<Note[]> {
-    return this.http.get<ApiResponse<Note[]>>(`/api/notes/search?keyword=${encodeURIComponent(keyword)}`, {
-      headers: this.getHeaders()
-    }).pipe(
+    return this.http.get<ApiResponse<Note[]>>(`/api/notes/search?keyword=${encodeURIComponent(keyword)}`).pipe(
       map(response => {
         if (response.code === 200 && response.data) {
           return response.data;
@@ -97,9 +104,7 @@ export class NoteService {
   }
 
   deleteNote(noteId: string): Observable<boolean> {
-    return this.http.delete<ApiResponse<any>>(`/api/notes/${noteId}`, {
-      headers: this.getHeaders()
-    }).pipe(
+    return this.http.delete<ApiResponse<any>>(`/api/notes/${noteId}`).pipe(
       map(response => {
         if (response.code === 200) {
           // 从本地缓存中移除
@@ -129,9 +134,7 @@ export class NoteService {
       localChanges: localChanges
     };
 
-    return this.http.post<ApiResponse<SyncResponse>>('/api/notes/sync', syncRequest, {
-      headers: this.getHeaders()
-    }).pipe(
+    return this.http.post<ApiResponse<SyncResponse>>('/api/notes/sync', syncRequest).pipe(
       map(apiResponse => {
         if (apiResponse.code === 200 && apiResponse.data) {
           return apiResponse.data;
@@ -155,20 +158,21 @@ export class NoteService {
   }
 
   getTags(): Observable<Tag[]> {
-    return this.http.get<ApiResponse<Tag[]>>(`/api/notes/tags`, {
-      headers: this.getHeaders()
-    }).pipe(
+    return this.http.get<ApiResponse<Tag[]>>(`/api/notes/tags`).pipe(
       map(response => {
-        if (response.code === 200 && response.data) {
-          
-          this.currentTagsSubject.next(response.data);
-          return response.data;
-        }
-        return [];
+        const serverTags = response.code === 200 && response.data ? response.data : [];
+        const tags = serverTags.filter(t => t.tagId !== ALL_TAG_ID);
+        const tagsWithAll: Tag[] = [{ tagId: ALL_TAG_ID, tagName: ALL_TAG_NAME }, ...tags];
+
+        this.currentTagsSubject.next(tagsWithAll);
+        return tagsWithAll;
       }),
       catchError(error => {
         console.error('获取标签失败:', error);
-        return of([]);
+
+        const fallback: Tag[] = [{ tagId: ALL_TAG_ID, tagName: ALL_TAG_NAME }];
+        this.currentTagsSubject.next(fallback);
+        return of(fallback);
       })
     );
   }
