@@ -5,17 +5,41 @@
     </div>
     @if(isAuthenticated){
         <div class="center-section">
-        <div class="search">
-            <span class="iconfont icon-search"></span>
-            <input
-                class="search-input"
-                type="text"
-                placeholder="搜索笔记"
-                [(ngModel)]="keyword"
-                (ngModelChange)="onKeywordChange($event)"
-            />
-            @if(keyword){
-                <span class="search-clear" (click)="clearSearch($event)">×</span>
+        <div class="search-wrapper" #searchWrapper>
+            <div class="search">
+                <span class="iconfont icon-search"></span>
+                <input
+                    class="search-input"
+                    type="text"
+                    placeholder="搜索笔记"
+                    [(ngModel)]="keyword"
+                    (focus)="onKeywordFocus()"
+                    (ngModelChange)="onKeywordChange($event)"
+                />
+                @if(keyword){
+                    <span class="search-clear" (click)="clearSearch($event)">×</span>
+                }
+            </div>
+
+            @if(resultsVisible){
+                <div class="search-results">
+                    @if(isSearching){
+                        <div class="search-empty">搜索中...</div>
+                    }
+                    @else{
+                        @if(searchResults.length === 0){
+                            <div class="search-empty">没有匹配结果</div>
+                        }
+                        @else{
+                            @for(note of searchResults; track note.noteId){
+                                <div class="search-item" (click)="selectSearchResult(note, $event)">
+                                    <div class="search-item-title">{{ note.title || '无标题' }}</div>
+                                    <div class="search-item-preview">{{ getResultPreview(note.content) }}</div>
+                                </div>
+                            }
+                        }
+                    }
+                </div>
             }
         </div>
     </div>
