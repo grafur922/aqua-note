@@ -58,18 +58,10 @@
             
             @if(filteredNotes.length === 0 && !isLoading){
                 <div class="empty-state">
-                    @if (searchKeyword) {
-                        <div class="empty-message">
-                            <p>没有找到匹配的笔记</p>
-                            <p class="empty-hint">尝试使用其他关键词搜索</p>
-                        </div>
-                    }
-                    @else{
-                        <div class="empty-message">
-                            <p>还没有笔记</p>
-                            <p class="empty-hint">点击"添加"按钮创建你的第一篇笔记</p>
-                        </div>
-                    }
+                    <div class="empty-message">
+                        <p>还没有笔记</p>
+                        <p class="empty-hint">点击"添加"按钮创建你的第一篇笔记</p>
+                    </div>
                 </div>
             }
         </div>
