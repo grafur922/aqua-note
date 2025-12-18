@@ -79,9 +79,10 @@ export class NoteListComponent implements OnInit, OnDestroy {
   menuContext: Note | null = null;
 
   ngOnInit(): void {
-    this.loadNotes();
+    this.subscribeToSelectedTag();
     this.subscribeToNotes();
     this.subscribeToCurrentNote();
+    this.subscribeToSearchKeyword();
     this.loadTags();
   }
 
@@ -97,7 +98,7 @@ export class NoteListComponent implements OnInit, OnDestroy {
   refreshNotes(): void {
     console.log(this.filteredNotes);
     this.loadTags();
-    this.loadNotes();
+    this.loadNotes(this.noteService.getSelectedTagId());
   }
   
   tags: Tag[] = [];
@@ -114,9 +115,9 @@ export class NoteListComponent implements OnInit, OnDestroy {
       });
   }
   
-  loadNotes(): void {
+  loadNotes(tagId: string | null = null): void {
     this.isLoading = true;
-    this.noteService.getNotes()
+    this.noteService.getNotes(tagId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (notes) => {
@@ -128,6 +129,15 @@ export class NoteListComponent implements OnInit, OnDestroy {
           console.error('加载笔记失败:', error);
           this.isLoading = false;
         }
+      });
+  }
+
+
+  private subscribeToSelectedTag(): void {
+    this.noteService.selectedTagId$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tagId => {
+        this.loadNotes(tagId);
       });
   }
 
@@ -147,6 +157,16 @@ export class NoteListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(note => {
         this.selectedNote = note;
+      });
+  }
+
+
+  private subscribeToSearchKeyword(): void {
+    this.noteService.searchKeyword$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(keyword => {
+        this.searchKeyword = keyword;
+        this.filterNotes();
       });
   }
 
@@ -190,15 +210,27 @@ export class NoteListComponent implements OnInit, OnDestroy {
 
 
   private filterNotes(): void {
-    if (!this.searchKeyword.trim()) {
+    const keyword = this.searchKeyword.trim().toLowerCase();
+    if (!keyword) {
       this.filteredNotes = [...this.notes];
-    } else {
-      const keyword = this.searchKeyword.toLowerCase();
-      this.filteredNotes = this.notes.filter(note => 
-        note.title.toLowerCase().includes(keyword) || 
-        note.content.toLowerCase().includes(keyword)
-      );
+      return;
     }
+
+    const scored = this.notes
+      .map((note, index) => {
+        const title = (note.title || '').toLowerCase();
+        const content = (note.content || '').replace(/<[^>]*>/g, '').toLowerCase();
+
+        const titleHit = title.includes(keyword);
+        const contentHit = content.includes(keyword);
+        const rank = titleHit ? 0 : (contentHit ? 1 : 2);
+
+        return { note, index, rank };
+      })
+      .filter(x => x.rank < 2)
+      .sort((a, b) => a.rank - b.rank || a.index - b.index);
+
+    this.filteredNotes = scored.map(x => x.note);
   }
 
 

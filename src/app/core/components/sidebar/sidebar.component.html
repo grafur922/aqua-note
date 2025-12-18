@@ -1,5 +1,5 @@
 <div class="sideMain">
-    <ul class="menu">
+    <ul class="menu-list">
         <li class="item" 
             [class.active-item]="isActive('notes')" 
             title="笔记"
@@ -25,4 +25,21 @@
             </div>
         </li>
     </ul>
+    <div class="menu-bottom">
+        <ul class="menu-list">
+            <li class="item">
+                <div class="box" title="设置" (click)="openSettingsMenu($event)">
+                    <span class="iconfont icon-settings sidebar-icon"></span>
+                </div>
+            </li>
+        </ul>
+    </div>
 </div>
+
+<app-context-menu
+    [menuProps]="settingsMenuProps"
+    [visible]="settingsMenuVisible"
+    [position]="settingsMenuPosition"
+    [context]="null"
+    (itemSelected)="onSettingsMenuItemSelected()">
+</app-context-menu>

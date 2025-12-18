@@ -50,5 +50,21 @@
             outline: none;
         }
 
+        &.is-disabled {
+            cursor: default;
+            color: rgba(33, 38, 44, 0.6);
+
+            &:not(:active):hover,
+            &:focus {
+                background-color: transparent;
+            }
+
+            &:focus,
+            &:active {
+                background-color: transparent;
+                outline: none;
+            }
+        }
+
     }
 }

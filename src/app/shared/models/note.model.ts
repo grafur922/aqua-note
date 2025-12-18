@@ -39,3 +39,6 @@ export interface Tag {
     tagId: string;
     tagName: string;
 }
+
+export const ALL_TAG_ID = '__ALL__';
+export const ALL_TAG_NAME = '全部';

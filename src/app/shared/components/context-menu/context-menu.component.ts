@@ -18,6 +18,11 @@ export class ContextMenuComponent {
 
   onItemClick(event: MouseEvent, item: contextMenu): void {
     event.stopPropagation();
+
+    if (item.disabled) {
+      return;
+    }
+
     item.operation?.(this.context());
     this.itemSelected.emit(item);
   }
