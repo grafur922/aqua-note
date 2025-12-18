@@ -24,7 +24,6 @@ export class NoteListComponent implements OnInit, OnDestroy {
   
   notes: Note[] = [];
   filteredNotes: Note[] = [];
-  searchKeyword: string = '';
   selectedNote: Note | null = null;
   isLoading: boolean = false;
   router=inject(Router);
@@ -82,7 +81,6 @@ export class NoteListComponent implements OnInit, OnDestroy {
     this.subscribeToSelectedTag();
     this.subscribeToNotes();
     this.subscribeToCurrentNote();
-    this.subscribeToSearchKeyword();
     this.loadTags();
   }
 
@@ -161,16 +159,6 @@ export class NoteListComponent implements OnInit, OnDestroy {
   }
 
 
-  private subscribeToSearchKeyword(): void {
-    this.noteService.searchKeyword$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(keyword => {
-        this.searchKeyword = keyword;
-        this.filterNotes();
-      });
-  }
-
-
   createNote(): void {
     const newNote = this.noteService.createNote();
     this.selectNote(newNote);
@@ -204,33 +192,8 @@ export class NoteListComponent implements OnInit, OnDestroy {
   }
 
 
-  onSearch(): void {
-    this.filterNotes();
-  }
-
-
   private filterNotes(): void {
-    const keyword = this.searchKeyword.trim().toLowerCase();
-    if (!keyword) {
-      this.filteredNotes = [...this.notes];
-      return;
-    }
-
-    const scored = this.notes
-      .map((note, index) => {
-        const title = (note.title || '').toLowerCase();
-        const content = (note.content || '').replace(/<[^>]*>/g, '').toLowerCase();
-
-        const titleHit = title.includes(keyword);
-        const contentHit = content.includes(keyword);
-        const rank = titleHit ? 0 : (contentHit ? 1 : 2);
-
-        return { note, index, rank };
-      })
-      .filter(x => x.rank < 2)
-      .sort((a, b) => a.rank - b.rank || a.index - b.index);
-
-    this.filteredNotes = scored.map(x => x.note);
+    this.filteredNotes = [...this.notes];
   }
 
 
