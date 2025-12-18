@@ -3,11 +3,30 @@ import { BehaviorSubject, catchError, map, Observable, of, shareReplay } from 'r
 import { LoginCredentials } from '../../features/login/models/login-credentials.model';
 import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../interfaces/ApiResponse';
-import { LoginInfo } from '../../features/login/models/login-info.model';
 export interface User {
   id: string;
   email: string;
   name: string;
+}
+
+interface LoginUserDto {
+  userId: string;
+  userName: string;
+  email: string;
+  createAt: string;
+}
+
+interface LoginResponseDto {
+  user: LoginUserDto;
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresIn: number;
+}
+
+interface TokenResponseDto {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresIn: number;
 }
 
 @Injectable({
@@ -31,31 +50,33 @@ export class AuthService {
 
   private checkStoredAuth(): void {
     const token = localStorage.getItem('auth_token');
+    const refreshToken = localStorage.getItem('refresh_token');
     const userStr = localStorage.getItem('current_user');
     
-    if (token && userStr) {
+    if (token && refreshToken && userStr) {
       try {
         const user = JSON.parse(userStr);
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
-        this.logout();
+        this.logoutLocal();
       }
     }
   }
 
 
   login(loginCredentials: LoginCredentials): Observable<boolean> {
-    return this.http.post<ApiResponse<LoginInfo>>('/api/user/login', loginCredentials).pipe(
+    return this.http.post<ApiResponse<LoginResponseDto>>('/api/user/login', loginCredentials).pipe(
       map(res => {
-        if (res.code === 200 && res.data) {
+        if (res.code === 200 && res.data && res.data.user) {
           const user: User = {
-            id: res.data.userId,
-            email: res.data.email,
-            name: res.data.userName
+            id: res.data.user.userId,
+            email: res.data.user.email,
+            name: res.data.user.userName
           };
-          localStorage.setItem('auth_token', 'mock_token_' + Date.now());
+          localStorage.setItem('auth_token', res.data.accessToken);
+          localStorage.setItem('refresh_token', res.data.refreshToken);
           localStorage.setItem('current_user', JSON.stringify(user));
 
           this.currentUserSubject.next(user);
@@ -75,8 +96,51 @@ export class AuthService {
   }
 
 
-  logout(): void {
+  refresh(): Observable<boolean> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return of(false);
+    }
+
+    return this.http.post<ApiResponse<TokenResponseDto>>('/api/user/refresh', { refreshToken }).pipe(
+      map(res => {
+        if (res.code === 200 && res.data) {
+          localStorage.setItem('auth_token', res.data.accessToken);
+          localStorage.setItem('refresh_token', res.data.refreshToken);
+          this.isAuthenticatedSubject.next(true);
+          return true;
+        }
+        return false;
+      }),
+      catchError(() => of(false)),
+      shareReplay(1)
+    );
+  }
+
+
+  logout(): Observable<boolean> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.logoutLocal();
+      return of(true);
+    }
+
+    return this.http.post<ApiResponse<unknown>>('/api/user/logout', { refreshToken }).pipe(
+      map((res) => {
+        this.logoutLocal();
+        return res.code === 200;
+      }),
+      catchError(() => {
+        this.logoutLocal();
+        return of(false);
+      })
+    );
+  }
+
+
+  logoutLocal(): void {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
@@ -92,8 +156,13 @@ export class AuthService {
     return this.isAuthenticatedSubject.value;
   }
 
-  getToken(): string | null {
+  getAccessToken(): string | null {
     return localStorage.getItem('auth_token');
+  }
+
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
   }
 
 

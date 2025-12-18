@@ -3,12 +3,23 @@
         <div class="icon"></div>
         <span class="app-name"></span>
     </div>
-    <div class="center-section">
+    @if(isAuthenticated){
+        <div class="center-section">
         <div class="search">
             <span class="iconfont icon-search"></span>
-            <span>搜索笔记</span>
+            <input
+                class="search-input"
+                type="text"
+                placeholder="搜索笔记"
+                [(ngModel)]="keyword"
+                (ngModelChange)="onKeywordChange($event)"
+            />
+            @if(keyword){
+                <span class="search-clear" (click)="clearSearch($event)">×</span>
+            }
         </div>
     </div>
+    }
     <div class="right-section">
         <!-- <div class="window-controls">
             <button class="control-btn minimize-btn" title="最小化">

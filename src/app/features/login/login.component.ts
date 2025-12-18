@@ -40,11 +40,14 @@ export class LoginComponent {
       this.authService.login(credentials).subscribe({
         next: (response) => {
           console.log('Login successful', response);
-          this.router.navigate(['/']); // 登录成功后导航到主页
-        },
-        error: (error) => {
-          console.error('Login failed', error);
-          // 在这里处理错误，例如显示一个提示消息
+          if (response) {
+            this.router.navigate(['/']); // 登录成功后导航到主页
+          } else {
+            // console.error('failed: ', error);
+          this.loginForm.get('password')?.setValue('');
+          this.loginForm.get('password')?.setErrors({ invalidPassword: true });
+            // console.error('Login failed');
+          }
         }
       });
     }

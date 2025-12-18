@@ -1,10 +1,13 @@
 @import url(../../../../styles.less);
 .sideMain{
     width: 45px;
-    height: 100vh;
+    height: calc(100vh - 45px);
     // background-color: rgba(209,244,230,0.7);
     border-right: @divide-style;
-    .menu{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    .menu-list{
         .item{
             height: 45px;
             .frcc();
@@ -20,6 +23,10 @@
                 transition: background-color 0.2s;
             }
         }
+    }
+
+    .bottom_menu{
+        .menu-list();
     }
 }
 .sidebar-icon{

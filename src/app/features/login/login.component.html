@@ -29,6 +29,12 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label for="password">密码</mat-label>
             <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+            @if(loginForm.get('password')?.hasError('invalidPassword')){
+              <mat-error>密码不正确，请重新输入</mat-error>
+            }
+            @if(loginForm.get('password')?.hasError('required')){
+              <mat-error>密码不能为空</mat-error>
+            }
             <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
               <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
             </button>
