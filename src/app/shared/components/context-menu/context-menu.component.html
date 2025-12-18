@@ -3,12 +3,16 @@
     class="context-menu"
     [style.left.px]="position().x"
     [style.top.px]="position().y"
+    (click)="$event.stopPropagation()"
   >
     @for (item of menuProps(); track $index) {
 
       <button
         type="button"
         class="menu-item"
+        [class.is-disabled]="!!item.disabled"
+        [attr.aria-disabled]="item.disabled ? 'true' : 'false'"
+        [attr.tabindex]="item.disabled ? -1 : 0"
         (click)="onItemClick($event, item)"
       > 
         @if (item.icon) {
