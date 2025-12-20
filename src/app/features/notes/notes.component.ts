@@ -1,10 +1,10 @@
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, AfterContentInit, ChangeDetectionStrategy, viewChild, AfterViewInit, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ChangeDetectionStrategy, viewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, finalize, interval, takeUntil } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
 import { Note } from '../../shared/models/note.model';
-import { Editor } from '@toast-ui/editor'
+import Editor from '@toast-ui/editor';
 import '@toast-ui/editor/dist/toastui-editor.css'; // Editor's Style
 import '@toast-ui/editor/dist/i18n/zh-cn';
 @Component({
@@ -12,34 +12,62 @@ import '@toast-ui/editor/dist/i18n/zh-cn';
   imports: [CommonModule, FormsModule],
   templateUrl: './notes.component.html',
   styleUrl: './notes.component.less',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown)': 'onDocumentKeydown($event)',
+    '(window:beforeunload)': 'onBeforeUnload($event)'
+  }
 })
 export class NotesComponent implements OnInit, OnDestroy {
   private noteService = inject(NoteService);
   private destroy$ = new Subject<void>();
   private titleChange$ = new Subject<string>();
   private contentChange$ = new Subject<string>();
+  private syncTrigger$ = new Subject<void>();
   private cdr = inject(ChangeDetectorRef);
+  private lastRenderedNoteId: string | null = null;
+  private isSettingEditorContent = false;
+  private onKeydownCapture = (event: KeyboardEvent): void => {
+    const key = event.key?.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && key === 's') {
+      console.log('save');
+      
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      event.stopPropagation();
+      this.saveAndSync();
+    }
+  };
   currentNote: Note | null = null;
   isEditing: boolean = false;
   isSaving: boolean = false;
+  isSyncing: boolean = false;
+  hasUnsavedChanges: boolean = false;
   lastSaved: Date | null = null;
   editorRef = viewChild<ElementRef>('editor');
-  editor:typeof Editor;
+  editor?: typeof Editor;
 
   constructor() {
     effect(() => {
-      this.editor = new Editor({
-        el: this.editorRef()?.nativeElement,
+      const el = this.editorRef()?.nativeElement;
+      if (!el || this.editor) {
+        return;
+      }
+
+      const editor = new Editor({
+        el,
         initialEditType: 'markdown',
         previewStyle: 'tab',
-        height: 'calc(100% - 45px)',
+        height: 'calc(100% - 17px)',
         placeholder: '开始写下你的想法...',
         previewHighlight: true,
         language: 'zh-CN',
         events:{
           change:()=>{
-            const markdown=this.editor.getMarkdown();
+            if (this.isSettingEditorContent) {
+              return;
+            }
+            const markdown = editor.getMarkdown();
             if(this.currentNote){
               this.currentNote.content=markdown;
             }
@@ -47,22 +75,42 @@ export class NotesComponent implements OnInit, OnDestroy {
             this.onContentChange(markdown);
           }
         },
-        initialValue:this.currentNote?.content
-      })
+        initialValue: this.currentNote?.content || ''
+      });
+
+      this.editor = editor;
+
+      this.lastRenderedNoteId = this.currentNote?.noteId || null;
     })
   } 
 
   ngOnInit(): void {
+    document.addEventListener('keydown', this.onKeydownCapture, true);
     this.subscribeToCurrentNote();
     this.setupAutoSave();
-    this.noteService.currentNote$.subscribe(res=>{
-      // this.editorRef()?.nativeElement.setMarkdown(res?.content)
-      this.editor.setMarkdown(res?.content)
-    })
+    this.setupAutoSync();
+    this.noteService.currentNote$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        if (!this.editor) {
+          return;
+        }
+
+        const noteId = res?.noteId || null;
+        if (noteId === this.lastRenderedNoteId) {
+          return;
+        }
+
+        this.lastRenderedNoteId = noteId;
+        this.isSettingEditorContent = true;
+        this.editor.setMarkdown(res?.content || '');
+        this.isSettingEditorContent = false;
+      });
   }
 
 
   ngOnDestroy(): void {
+    document.removeEventListener('keydown', this.onKeydownCapture, true);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -89,6 +137,7 @@ export class NotesComponent implements OnInit, OnDestroy {
       .subscribe(title => {
         if (this.currentNote) {
           this.saveNote();
+          this.syncTrigger$.next();
         }
       });
 
@@ -102,6 +151,26 @@ export class NotesComponent implements OnInit, OnDestroy {
       .subscribe(content => {
         if (this.currentNote) {
           this.saveNote();
+          this.syncTrigger$.next();
+        }
+      });
+  }
+
+  private setupAutoSync(): void {
+    this.syncTrigger$
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(1200)
+      )
+      .subscribe(() => {
+        this.syncPendingNotes();
+      });
+
+    interval(30000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.noteService.hasPendingSync()) {
+          this.syncPendingNotes();
         }
       });
   }
@@ -109,6 +178,7 @@ export class NotesComponent implements OnInit, OnDestroy {
   onTitleChange(title: string): void {
     if (this.currentNote) {
       this.currentNote.title = title;
+      this.hasUnsavedChanges = true;
       this.titleChange$.next(title);
       this.cdr.markForCheck();
     }
@@ -118,6 +188,7 @@ export class NotesComponent implements OnInit, OnDestroy {
   onContentChange(content: string): void {
     if (this.currentNote) {
       this.currentNote.content = content;
+      this.hasUnsavedChanges = true;
       this.contentChange$.next(content);
       this.cdr.markForCheck();
     }
@@ -131,6 +202,8 @@ export class NotesComponent implements OnInit, OnDestroy {
 
     this.noteService.updateNote(this.currentNote);
 
+    this.hasUnsavedChanges = false;
+
 
     // setTimeout(() => {
     this.isSaving = false;
@@ -141,29 +214,164 @@ export class NotesComponent implements OnInit, OnDestroy {
 
 
   manualSave(): void {
-    this.saveNote();
+    this.saveAndSync();
   }
 
 
   syncNotes(): void {
-    if (!this.currentNote) return;
+    this.syncPendingNotes();
+  }
 
-    this.noteService.syncNotes([this.currentNote])
-      .pipe(takeUntil(this.destroy$))
+  saveAndSync(): void {
+    console.log(this.currentNote);
+    console.log(this.hasUnsavedChanges);
+    
+    if (!this.currentNote) {
+      return;
+    }
+    if (this.hasUnsavedChanges) {
+      this.saveNote();
+    }
+    this.syncPendingNotes();
+  }
+
+  async confirmExitIfDirty(): Promise<boolean> {
+    const hasPending = this.noteService.hasPendingSync();
+    if (!hasPending && !this.hasUnsavedChanges) {
+      return true;
+    }
+
+    if (this.hasUnsavedChanges) {
+      this.saveNote();
+    }
+
+    const shouldSync = confirm('检测到未同步的修改，是否同步到云端？\n确定：同步到云端\n取消：仅保存本地，直接退出');
+    if (!shouldSync) {
+      return true;
+    }
+
+    const success = await this.syncPendingNotesOnce();
+    if (success) {
+      return true;
+    }
+
+    return confirm('同步失败，仍要退出吗？');
+  }
+
+  onDocumentKeydown(event: KeyboardEvent): void {
+    const key = event.key?.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && key === 's') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.saveAndSync();
+    }
+  }
+
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges || this.noteService.hasPendingSync()) {
+      event.preventDefault();
+      event.returnValue = ''; 
+    }
+  }
+
+  private syncPendingNotes(): void {
+    if (this.isSyncing) {
+      return;
+    }
+
+    const snapshot = this.noteService.getPendingSyncSnapshot();
+    if (!snapshot.length) {
+      return;
+    }
+
+    this.isSyncing = true;
+    const localChanges = snapshot.map(x => x.note);
+
+    this.noteService.syncNotes(localChanges)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.isSyncing = false;
+          this.cdr.markForCheck();
+        })
+      )
       .subscribe({
         next: (response) => {
           if (response?.success) {
-            console.log('同步成功');
+            const conflictIds = new Set(
+              (response.conflicts || [])
+                .map(c => c?.clientVersion?.noteId || c?.serverVersion?.noteId)
+                .filter((x): x is string => !!x)
+            );
+
+            const entriesToClear = snapshot
+              .filter(x => !conflictIds.has(x.note.noteId))
+              .map(x => ({ noteId: x.note.noteId, version: x.version }));
+
+            this.noteService.clearDirtyNotesByVersion(entriesToClear);
             this.lastSaved = new Date();
-            this.cdr.markForCheck();
+            console.log('同步成功');
           } else {
             console.error('同步失败:', response?.message);
           }
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('同步失败:', error);
         }
       });
+  }
+
+  private syncPendingNotesOnce(): Promise<boolean> {
+    if (this.isSyncing) {
+      return Promise.resolve(false);
+    }
+
+    const snapshot = this.noteService.getPendingSyncSnapshot();
+    if (!snapshot.length) {
+      return Promise.resolve(true);
+    }
+
+    this.isSyncing = true;
+    const localChanges = snapshot.map(x => x.note);
+
+    return new Promise(resolve => {
+      this.noteService.syncNotes(localChanges)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.isSyncing = false;
+            this.cdr.markForCheck();
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            if (!response?.success) {
+              resolve(false);
+              return;
+            }
+
+            const conflictIds = new Set(
+              (response.conflicts || [])
+                .map(c => c?.clientVersion?.noteId || c?.serverVersion?.noteId)
+                .filter((x): x is string => !!x)
+            );
+
+            const entriesToClear = snapshot
+              .filter(x => !conflictIds.has(x.note.noteId))
+              .map(x => ({ noteId: x.note.noteId, version: x.version }));
+
+            this.noteService.clearDirtyNotesByVersion(entriesToClear);
+            this.lastSaved = new Date();
+            this.cdr.markForCheck();
+
+            resolve(conflictIds.size === 0);
+          },
+          error: () => {
+            resolve(false);
+          }
+        });
+    });
   }
 
 

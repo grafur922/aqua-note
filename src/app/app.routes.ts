@@ -10,6 +10,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { LoginRedirectGuard } from './core/guards/login-redirect.guard';
 import { RoleGuard } from './core/guards/role.guard';
 import { PermissionGuard } from './core/guards/permission.guard';
+import { PendingChangesGuard } from './core/guards/pending-changes.guard';
 
 export const routes: Routes = [
   { 
@@ -34,7 +35,8 @@ export const routes: Routes = [
     children: [
       { 
         path: 'notes', 
-        component: NotesViewComponent 
+        component: NotesViewComponent,
+        canDeactivate: [PendingChangesGuard]
       },
       { 
         path: 'todos', 
