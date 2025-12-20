@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
-import { Note, SyncRequest, SyncResponse, ApiResponse, Tag, ALL_TAG_ID, ALL_TAG_NAME } from '../../shared/models/note.model';
+import { Note, SyncRequest, SyncResponse, ApiResponse, Tag, ALL_TAG_ID, ALL_TAG_NAME, ConflictInfo } from '../../shared/models/note.model';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -33,10 +33,70 @@ export class NoteService {
   private searchKeywordSubject = new BehaviorSubject<string>('');
   public searchKeyword$ = this.searchKeywordSubject.asObservable();
 
+  private dirtyVersion = 0;
+  private pendingSyncNotes = new Map<string, { note: Note; version: number }>();
+  private pendingSyncCountSubject = new BehaviorSubject<number>(0);
+  public pendingSyncCount$ = this.pendingSyncCountSubject.asObservable();
+
   constructor() { 
     this.tags$.subscribe(tags => {
       console.log(tags);
     });
+  }
+
+  markNoteDirty(note: Note): void {
+    if (!note?.noteId) {
+      return;
+    }
+
+    const version = ++this.dirtyVersion;
+    this.pendingSyncNotes.set(note.noteId, { note: { ...note }, version });
+    this.pendingSyncCountSubject.next(this.pendingSyncNotes.size);
+  }
+
+  getPendingSyncNotes(): Note[] {
+    return Array.from(this.pendingSyncNotes.values()).map(x => x.note);
+  }
+
+  getPendingSyncSnapshot(): Array<{ note: Note; version: number }> {
+    return Array.from(this.pendingSyncNotes.values()).map(x => ({ note: x.note, version: x.version }));
+  }
+
+  hasPendingSync(): boolean {
+    return this.pendingSyncNotes.size > 0;
+  }
+
+  clearDirtyNotes(noteIds: string[]): void {
+    if (!noteIds?.length) {
+      return;
+    }
+
+    noteIds.forEach(id => {
+      this.pendingSyncNotes.delete(id);
+    });
+    this.pendingSyncCountSubject.next(this.pendingSyncNotes.size);
+  }
+
+  clearDirtyNotesByVersion(entries: Array<{ noteId: string; version: number }>): void {
+    if (!entries?.length) {
+      return;
+    }
+
+    entries.forEach(({ noteId, version }) => {
+      const current = this.pendingSyncNotes.get(noteId);
+      if (!current) {
+        return;
+      }
+      if (current.version === version) {
+        this.pendingSyncNotes.delete(noteId);
+      }
+    });
+    this.pendingSyncCountSubject.next(this.pendingSyncNotes.size);
+  }
+
+  clearAllDirtyNotes(): void {
+    this.pendingSyncNotes.clear();
+    this.pendingSyncCountSubject.next(0);
   }
 
   setSelectedTagId(tagId: string | null): void {
@@ -148,6 +208,8 @@ export class NoteService {
           if (response.serverChanges.length > 0) {
             this.mergeServerChanges(response.serverChanges);
           }
+
+          this.updateLocalSyncVersionsAfterSync(localChanges, response.conflicts || []);
         }
       }),
       catchError(error => {
@@ -190,9 +252,78 @@ export class NoteService {
       } else {
         updatedNotes.push(serverNote);
       }
+
+      if (this.currentNoteSubject.value?.noteId === serverNote.noteId) {
+        this.currentNoteSubject.next(serverNote);
+      }
     });
 
     this.notesSubject.next(updatedNotes);
+  }
+
+  private updateLocalSyncVersionsAfterSync(localChanges: Note[], conflicts: ConflictInfo[]): void {
+    if (!localChanges?.length) {
+      return;
+    }
+
+    const conflictMap = new Map<string, ConflictInfo>();
+    (conflicts || []).forEach(c => {
+      const id = c?.clientVersion?.noteId || c?.serverVersion?.noteId;
+      if (id) {
+        conflictMap.set(id, c);
+      }
+    });
+
+    localChanges.forEach(change => {
+      const noteId = change?.noteId;
+      if (!noteId) {
+        return;
+      }
+
+      const conflict = conflictMap.get(noteId);
+      const nextSyncVersion = conflict
+        ? conflict.serverVersion?.syncVersion
+        : (change.syncVersion || 0) + 1;
+
+      if (typeof nextSyncVersion !== 'number') {
+        return;
+      }
+
+      this.patchNoteSyncVersion(noteId, nextSyncVersion);
+      this.patchPendingSyncNoteSyncVersion(noteId, nextSyncVersion);
+    });
+  }
+
+  private patchNoteSyncVersion(noteId: string, syncVersion: number): void {
+    const currentNotes = this.notesSubject.value;
+    const idx = currentNotes.findIndex(n => n.noteId === noteId);
+    if (idx >= 0) {
+      const updated = { ...currentNotes[idx], syncVersion };
+      const next = [...currentNotes];
+      next[idx] = updated;
+      this.notesSubject.next(next);
+
+      if (this.currentNoteSubject.value?.noteId === noteId) {
+        this.currentNoteSubject.next(updated);
+      }
+      return;
+    }
+
+    if (this.currentNoteSubject.value?.noteId === noteId) {
+      this.currentNoteSubject.next({ ...this.currentNoteSubject.value, syncVersion });
+    }
+  }
+
+  private patchPendingSyncNoteSyncVersion(noteId: string, syncVersion: number): void {
+    const entry = this.pendingSyncNotes.get(noteId);
+    if (!entry) {
+      return;
+    }
+
+    this.pendingSyncNotes.set(noteId, {
+      ...entry,
+      note: { ...entry.note, syncVersion }
+    });
   }
 
   setCurrentNote(note: Note | null): void {
@@ -218,6 +349,8 @@ export class NoteService {
   
     this.setCurrentNote(newNote);
 
+    this.markNoteDirty(newNote);
+
     return newNote;
   }
 
@@ -229,6 +362,8 @@ export class NoteService {
     if (noteIndex >= 0) {
       updatedNote.updatedAt = new Date().toISOString();
       // updatedNote.syncVersion += 1;
+
+      this.markNoteDirty(updatedNote);
       
       const updatedNotes = [...currentNotes];
       updatedNotes[noteIndex] = updatedNote;
