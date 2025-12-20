@@ -3,5 +3,4 @@ export interface LoginInfo {
     email:string,
     userId:string,
     userName:string,
-    
 }
