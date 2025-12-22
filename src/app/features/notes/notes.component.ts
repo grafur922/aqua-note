@@ -1,12 +1,14 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ChangeDetectionStrategy, viewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, finalize, interval, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, debounceTime, distinctUntilChanged, finalize, interval, takeUntil } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
 import { Note } from '../../shared/models/note.model';
 import Editor from '@toast-ui/editor';
 import '@toast-ui/editor/dist/toastui-editor.css'; // Editor's Style
 import '@toast-ui/editor/dist/i18n/zh-cn';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 @Component({
   selector: 'app-notes',
   imports: [CommonModule, FormsModule],
@@ -20,6 +22,7 @@ import '@toast-ui/editor/dist/i18n/zh-cn';
 })
 export class NotesComponent implements OnInit, OnDestroy {
   private noteService = inject(NoteService);
+  private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
   private titleChange$ = new Subject<string>();
   private contentChange$ = new Subject<string>();
@@ -27,6 +30,7 @@ export class NotesComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private lastRenderedNoteId: string | null = null;
   private isSettingEditorContent = false;
+  // private editorHostEl: HTMLElement | null = null;
   private onKeydownCapture = (event: KeyboardEvent): void => {
     const key = event.key?.toLowerCase();
     if ((event.ctrlKey || event.metaKey) && key === 's') {
@@ -62,16 +66,16 @@ export class NotesComponent implements OnInit, OnDestroy {
         placeholder: '开始写下你的想法...',
         previewHighlight: true,
         language: 'zh-CN',
-        events:{
-          change:()=>{
+        events: {
+          change: () => {
             if (this.isSettingEditorContent) {
               return;
             }
             const markdown = editor.getMarkdown();
-            if(this.currentNote){
-              this.currentNote.content=markdown;
+            if (this.currentNote) {
+              this.currentNote.content = markdown;
             }
-            
+
             this.onContentChange(markdown);
           }
         },
@@ -79,8 +83,12 @@ export class NotesComponent implements OnInit, OnDestroy {
       });
 
       this.editor = editor;
-
+      // this.editorHostEl = el;
       this.lastRenderedNoteId = this.currentNote?.noteId || null;
+
+      // this.isSettingEditorContent = true;
+      // this.editor.setMarkdown(this.currentNote?.content || '');
+      // this.isSettingEditorContent = false;
     })
   } 
 
@@ -92,6 +100,18 @@ export class NotesComponent implements OnInit, OnDestroy {
     this.noteService.currentNote$
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
+        if (!res) {
+          this.lastRenderedNoteId = null;
+          if (this.editor) {
+            try {
+              (this.editor as any)?.destroy?.();
+            } finally {
+              this.editor = undefined;
+            }
+          }
+          return;
+        }
+
         if (!this.editor) {
           return;
         }
@@ -245,7 +265,16 @@ export class NotesComponent implements OnInit, OnDestroy {
       this.saveNote();
     }
 
-    const shouldSync = confirm('检测到未同步的修改，是否同步到云端？\n确定：同步到云端\n取消：仅保存本地，直接退出');
+    const shouldSync = await firstValueFrom(
+      this.dialog.open(ConfirmDialogComponent, {
+        data: {
+          title: '未同步的修改',
+          message: '检测到未同步的修改，是否同步到云端？\n确定：同步到云端\n取消：仅保存本地，直接退出',
+          confirmText: '同步',
+          cancelText: '退出'
+        }
+      }).afterClosed()
+    );
     if (!shouldSync) {
       return true;
     }
@@ -255,7 +284,18 @@ export class NotesComponent implements OnInit, OnDestroy {
       return true;
     }
 
-    return confirm('同步失败，仍要退出吗？');
+    const exitAnyway = await firstValueFrom(
+      this.dialog.open(ConfirmDialogComponent, {
+        data: {
+          title: '同步失败',
+          message: '同步失败，仍要退出吗？',
+          confirmText: '退出',
+          cancelText: '取消'
+        }
+      }).afterClosed()
+    );
+
+    return !!exitAnyway;
   }
 
   onDocumentKeydown(event: KeyboardEvent): void {

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ContextMenuComponent } from '../../../shared/components/context-menu/context-menu.component';
 import { contextMenu } from '../../../shared/models/contextMenu.model';
 import { AuthService } from '../../services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-sidebar',
@@ -19,7 +20,7 @@ export class SidebarComponent {
   router = inject(Router);
   cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
-
+  private snackBar = inject(MatSnackBar);
 
   settingsMenuVisible = false;
   settingsMenuPosition = { x: 0, y: 0 };
@@ -54,7 +55,7 @@ export class SidebarComponent {
         title: '设置',
         icon: 'icon-settings',
         operation: () => {
-          alert('设置功能开发中');
+          this.snackBar.open('设置功能开发中', '关闭', { duration: 2000 });
         }
       },
       {

@@ -8,6 +8,10 @@ import { Router } from '@angular/router';
 import { contextMenu } from '../../shared/models/contextMenu.model';
 import { ContextMenuComponent } from "../../shared/components/context-menu/context-menu.component";
 import { TagDropdownComponent } from '../tag-dropdown/tag-dropdown.component';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PromptDialogComponent } from '../../shared/components/prompt-dialog/prompt-dialog.component';
 
 @Component({
   selector: 'app-note-list',
@@ -21,6 +25,8 @@ import { TagDropdownComponent } from '../tag-dropdown/tag-dropdown.component';
 export class NoteListComponent implements OnInit, OnDestroy {
   private noteService = inject(NoteService);
   private destroy$ = new Subject<void>();
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
   
   notes: Note[] = [];
   filteredNotes: Note[] = [];
@@ -47,7 +53,41 @@ export class NoteListComponent implements OnInit, OnDestroy {
         if (!note) {
           return;
         }
-        console.log('重命名', note);
+        this.hideContextMenu();
+        const currentTitle = (note.title || '').trim();
+
+        this.dialog.open(PromptDialogComponent, {
+          data: {
+            title: '重命名',
+            label: '标题',
+            placeholder: '请输入新的标题',
+            initialValue: currentTitle || '无标题',
+            required: true,
+            maxLength: 100,
+            confirmText: '确定',
+            cancelText: '取消'
+          }
+        })
+        .afterClosed()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((value) => {
+          if (value === null) {
+            return;
+          }
+
+          const trimmed = value.trim();
+          if (!trimmed) {
+            this.snackBar.open('标题不能为空', '关闭', { duration: 2000 });
+            return;
+          }
+
+          if (trimmed === currentTitle) {
+            return;
+          }
+
+          this.noteService.updateNote({ ...note, title: trimmed });
+          this.snackBar.open('已重命名', '关闭', { duration: 1500 });
+        });
       }
     },
     {
@@ -58,7 +98,41 @@ export class NoteListComponent implements OnInit, OnDestroy {
         if (!note) {
           return;
         }
-        console.log('删除', note);
+        this.hideContextMenu();
+        const title = (note.title || '').trim() || '无标题';
+
+        this.dialog.open(ConfirmDialogComponent, {
+          data: {
+            title: '删除笔记',
+            message: `确定要删除笔记"${title}"吗？`,
+            confirmText: '删除',
+            cancelText: '取消'
+          }
+        })
+        .afterClosed()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((confirmed) => {
+          if (!confirmed) {
+            return;
+          }
+
+          this.noteService.deleteNote(note.noteId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (success) => {
+                if (!success) {
+                  this.snackBar.open('删除笔记失败', '关闭', { duration: 2000 });
+                } else {
+                  this.snackBar.open('已删除', '关闭', { duration: 1500 });
+                }
+                this.refreshNotes();
+              },
+              error: (error) => {
+                console.error('删除笔记失败:', error);
+                this.snackBar.open('删除笔记失败', '关闭', { duration: 2000 });
+              }
+            });
+        });
       }
     },
     {
@@ -171,24 +245,38 @@ export class NoteListComponent implements OnInit, OnDestroy {
 
   deleteNote(note: Note, event: Event): void {
     event.stopPropagation(); // 防止触发选择事件
-    
-    if (confirm(`确定要删除笔记"${note.title}"吗？`)) {
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: '删除笔记',
+        message: `确定要删除笔记"${note.title}"吗？`,
+        confirmText: '删除',
+        cancelText: '取消'
+      }
+    })
+    .afterClosed()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+
       this.noteService.deleteNote(note.noteId)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (success) => {
             if (success) {
-              console.log('笔记删除成功');
+              this.snackBar.open('已删除', '关闭', { duration: 1500 });
             } else {
-              alert('删除笔记失败');
+              this.snackBar.open('删除笔记失败', '关闭', { duration: 2000 });
             }
           },
           error: (error) => {
             console.error('删除笔记失败:', error);
-            alert('删除笔记失败');
+            this.snackBar.open('删除笔记失败', '关闭', { duration: 2000 });
           }
         });
-    }
+    });
   }
 
 

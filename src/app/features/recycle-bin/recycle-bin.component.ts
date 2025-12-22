@@ -3,6 +3,9 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { NoteService } from '../../core/services/note.service';
 import { Note } from '../../shared/models/note.model';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-recycle-bin',
@@ -13,6 +16,8 @@ import { Note } from '../../shared/models/note.model';
 export class RecycleBinComponent implements OnInit, OnDestroy {
   private noteService = inject(NoteService);
   private destroy$ = new Subject<void>();
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   deletedNotes: Note[] = [];
   isLoading: boolean = false;
@@ -51,39 +56,63 @@ export class RecycleBinComponent implements OnInit, OnDestroy {
   restoreNote(note: Note, event: Event): void {
     event.stopPropagation();
     const title = note.title || '无标题';
-    if (!confirm(`确定要恢复笔记"${title}"吗？`)) {
-      return;
-    }
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: '恢复笔记',
+        message: `确定要恢复笔记"${title}"吗？`,
+        confirmText: '恢复',
+        cancelText: '取消'
+      }
+    })
+    .afterClosed()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
 
-    const restoredNote: Note = { ...note, isDeleted: false };
-    this.noteService.syncNotes([restoredNote])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((response) => {
-        if (response?.success) {
-          this.noteService.updateNote(restoredNote);
-          console.log('笔记恢复成功');
-        } else {
-          alert(response?.message || '恢复笔记失败');
-        }
-      });
+      const restoredNote: Note = { ...note, isDeleted: false };
+      this.noteService.syncNotes([restoredNote])
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((response) => {
+          if (response?.success) {
+            this.noteService.updateNote(restoredNote);
+            this.snackBar.open('已恢复', '关闭', { duration: 1500 });
+          } else {
+            this.snackBar.open(response?.message || '恢复笔记失败', '关闭', { duration: 2000 });
+          }
+        });
+    });
   }
 
   permanentlyDeleteNote(note: Note, event: Event): void {
     event.stopPropagation();
     const title = note.title || '无标题';
-    if (!confirm(`确定要永久删除笔记"${title}"吗？此操作无法撤销。`)) {
-      return;
-    }
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: '永久删除',
+        message: `确定要永久删除笔记"${title}"吗？此操作无法撤销。`,
+        confirmText: '永久删除',
+        cancelText: '取消'
+      }
+    })
+    .afterClosed()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
 
-    this.noteService.deleteNote(note.noteId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((success) => {
-        if (success) {
-          console.log('笔记永久删除成功');
-        } else {
-          alert('永久删除失败');
-        }
-      });
+      this.noteService.deleteNote(note.noteId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((success) => {
+          if (success) {
+            this.snackBar.open('已永久删除', '关闭', { duration: 1500 });
+          } else {
+            this.snackBar.open('永久删除失败', '关闭', { duration: 2000 });
+          }
+        });
+    });
   }
 
   clearAll(): void {
@@ -91,25 +120,37 @@ export class RecycleBinComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm(`确定要清空回收站吗？将永久删除 ${this.deletedNotes.length} 条笔记，且无法撤销。`)) {
-      return;
-    }
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: '清空回收站',
+        message: `确定要清空回收站吗？将永久删除 ${this.deletedNotes.length} 条笔记，且无法撤销。`,
+        confirmText: '清空',
+        cancelText: '取消'
+      }
+    })
+    .afterClosed()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
 
-    this.isClearing = true;
-    const notesToDelete = [...this.deletedNotes];
+      this.isClearing = true;
+      const notesToDelete = [...this.deletedNotes];
 
-    forkJoin(notesToDelete.map(note => this.noteService.deleteNote(note.noteId)))
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((results) => {
-        const successCount = results.filter(Boolean).length;
-        this.isClearing = false;
+      forkJoin(notesToDelete.map(note => this.noteService.deleteNote(note.noteId)))
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((results) => {
+          const successCount = results.filter(Boolean).length;
+          this.isClearing = false;
 
-        if (successCount === notesToDelete.length) {
-          console.log('回收站清空成功');
-        } else {
-          alert(`回收站清空部分失败（${successCount}/${notesToDelete.length}）`);
-        }
-      });
+          if (successCount === notesToDelete.length) {
+            this.snackBar.open('回收站已清空', '关闭', { duration: 1500 });
+          } else {
+            this.snackBar.open(`回收站清空部分失败（${successCount}/${notesToDelete.length}）`, '关闭', { duration: 2500 });
+          }
+        });
+    });
   }
 
   formatDate(dateString: string | undefined): string {

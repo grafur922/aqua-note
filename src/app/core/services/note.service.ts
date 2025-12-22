@@ -23,7 +23,6 @@ export class NoteService {
   // 同步版本号
   private lastSyncVersion = 0;
 
-
   private currentTagsSubject = new BehaviorSubject<Tag[]>([]);
   public tags$ = this.currentTagsSubject.asObservable();
 
@@ -167,13 +166,26 @@ export class NoteService {
     return this.http.delete<ApiResponse<any>>(`/api/notes/${noteId}`).pipe(
       map(response => {
         if (response.code === 200) {
-          // 从本地缓存中移除
           const currentNotes = this.notesSubject.value;
-          const updatedNotes = currentNotes.filter(note => note.noteId !== noteId);
+          const updatedNotes = currentNotes.map(note => {
+            if (note.noteId !== noteId) {
+              return note;
+            }
+
+            return {
+              ...note,
+              isDeleted: true,
+              updatedAt: new Date().toISOString()
+            };
+          });
+
           this.notesSubject.next(updatedNotes);
+          this.pendingSyncNotes.delete(noteId);
+          this.pendingSyncCountSubject.next(this.pendingSyncNotes.size);
           
           if (this.currentNoteSubject.value?.noteId === noteId) {
-            this.currentNoteSubject.next(null);
+            const fallback = updatedNotes.find(n => !n.isDeleted) || null;
+            this.currentNoteSubject.next(fallback);
           }
           
           return true;
