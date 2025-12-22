@@ -9,12 +9,15 @@
       [formControl]="valueControl"
       (keyup.enter)="onConfirm()"
     />
+
     @if (data.maxLength) {
       <mat-hint align="end">{{ valueControl.value.length }}/{{ data.maxLength }}</mat-hint>
     }
+
     @if (valueControl.hasError('required') && (valueControl.touched || valueControl.dirty)) {
       <mat-error>不能为空</mat-error>
     }
+
     @if (valueControl.hasError('maxlength') && (valueControl.touched || valueControl.dirty)) {
       <mat-error>超过最大长度</mat-error>
     }
