@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>{{ data.title || '确认' }}</h2>
+
+<div mat-dialog-content class="confirm-dialog__content">
+  {{ data.message }}
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">
+    {{ data.cancelText || '取消' }}
+  </button>
+  <button mat-flat-button color="primary" type="button" (click)="onConfirm()">
+    {{ data.confirmText || '确定' }}
+  </button>
+</div>
