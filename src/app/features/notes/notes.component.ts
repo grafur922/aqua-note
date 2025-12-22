@@ -57,7 +57,7 @@ export class NotesComponent implements OnInit, OnDestroy {
       if (!el || this.editor) {
         return;
       }
-
+      this.editorRef()?.nativeElement.setAttribute('spellcheck', 'false');
       const editor = new Editor({
         el,
         initialEditType: 'markdown',

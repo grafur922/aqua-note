@@ -10,8 +10,8 @@ import { ContextMenuComponent } from "../../shared/components/context-menu/conte
 import { TagDropdownComponent } from '../tag-dropdown/tag-dropdown.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PromptDialogComponent } from '../../shared/components/prompt-dialog/prompt-dialog.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-note-list',
@@ -54,8 +54,8 @@ export class NoteListComponent implements OnInit, OnDestroy {
           return;
         }
         this.hideContextMenu();
-        const currentTitle = (note.title || '').trim();
 
+        const currentTitle = (note.title || '').trim();
         this.dialog.open(PromptDialogComponent, {
           data: {
             title: '重命名',
