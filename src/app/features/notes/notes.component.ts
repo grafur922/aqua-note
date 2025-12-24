@@ -123,9 +123,51 @@ export class NotesComponent implements OnInit, OnDestroy {
 
         this.lastRenderedNoteId = noteId;
         this.isSettingEditorContent = true;
-        this.editor.setMarkdown(res?.content || '');
+        (this.editor as any).setMarkdown(res?.content || '', false);
         this.isSettingEditorContent = false;
+
+        setTimeout(() => {
+          this.resetEditorViewport();
+        }, 0);
       });
+  }
+
+  private resetEditorViewport(): void {
+    const editor = this.editor as any;
+    if (!editor) {
+      return;
+    }
+
+    try {
+      editor.setScrollTop?.(0);
+    } catch {
+    }
+
+    try {
+      const host = this.editorRef()?.nativeElement as HTMLElement | undefined;
+      const contents = host?.querySelector?.('.toastui-editor-contents') as HTMLElement | null;
+      if (contents) {
+        contents.scrollTop = 0;
+      }
+    } catch {
+    }
+
+    try {
+      editor.moveCursorToStart?.();
+    } catch {
+    }
+
+    try {
+      const modeEditor = editor.getCurrentModeEditor?.();
+      modeEditor?.setCursor?.({ line: 0, ch: 0 });
+      modeEditor?.focus?.();
+    } catch {
+    }
+
+    try {
+      editor.setCursorPosition?.(0, 0);
+    } catch {
+    }
   }
 
 

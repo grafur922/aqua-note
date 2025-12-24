@@ -47,7 +47,6 @@ export class NoteService {
     if (!note?.noteId) {
       return;
     }
-
     const version = ++this.dirtyVersion;
     this.pendingSyncNotes.set(note.noteId, { note: { ...note }, version });
     this.pendingSyncCountSubject.next(this.pendingSyncNotes.size);
