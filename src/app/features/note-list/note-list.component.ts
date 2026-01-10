@@ -85,8 +85,48 @@ export class NoteListComponent implements OnInit, OnDestroy {
             return;
           }
 
-          this.noteService.updateNote({ ...note, title: trimmed });
-          this.snackBar.open('已重命名', '关闭', { duration: 1500 });
+          const updated = { ...note, title: trimmed };
+          this.noteService.updateNote(updated);
+
+          const pending = this.noteService
+            .getPendingSyncSnapshot()
+            .find(x => x.note.noteId === note.noteId);
+          const pendingVersion = pending?.version;
+
+          this.snackBar.open('已重命名，正在同步...', '关闭', { duration: 1200 });
+          this.noteService.syncNotes([updated])
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (response) => {
+                if (!response?.success) {
+                  this.snackBar.open('同步失败，已保存本地（稍后会自动重试）', '关闭', { duration: 2500 });
+                  return;
+                }
+
+                const conflictIds = new Set(
+                  (response.conflicts || [])
+                    .map(c => c?.clientVersion?.noteId || c?.serverVersion?.noteId)
+                    .filter((x): x is string => !!x)
+                );
+
+                if (conflictIds.has(note.noteId)) {
+                  this.snackBar.open('已重命名，但同步发生冲突（请稍后处理）', '关闭', { duration: 2500 });
+                  return;
+                }
+
+                if (typeof pendingVersion === 'number') {
+                  this.noteService.clearDirtyNotesByVersion([{ noteId: note.noteId, version: pendingVersion }]);
+                } else {
+                  this.noteService.clearDirtyNotes([note.noteId]);
+                }
+
+                this.snackBar.open('已同步', '关闭', { duration: 1500 });
+              },
+              error: (error) => {
+                console.error('同步失败:', error);
+                this.snackBar.open('同步失败，已保存本地（稍后会自动重试）', '关闭', { duration: 2500 });
+              }
+            });
         });
       }
     },

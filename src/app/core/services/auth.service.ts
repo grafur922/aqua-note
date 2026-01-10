@@ -1,8 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, map, Observable, of, shareReplay } from 'rxjs';
 import { LoginCredentials } from '../../features/login/models/login-credentials.model';
+import { RegisterCredentials } from '../../features/register/models/register-credentials.model';
 import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../interfaces/ApiResponse';
+
 export interface User {
   id: string;
   email: string;
@@ -91,6 +93,23 @@ export class AuthService {
       catchError(err => {
         console.error('Login request failed:', err);
         return of(false);
+      })
+    );
+  }
+
+
+  register(registerCredentials: RegisterCredentials): Observable<{ ok: boolean; message?: string }> {
+    return this.http.post<ApiResponse<LoginUserDto>>('/api/user/register', registerCredentials).pipe(
+      map((res) => {
+        if (res.code === 200 && res.data) {
+          return { ok: true };
+        }
+        console.error('Register failed:', res.message);
+        return { ok: false, message: res.message };
+      }),
+      catchError((err) => {
+        console.error('Register request failed:', err);
+        return of({ ok: false, message: '注册请求失败' });
       })
     );
   }

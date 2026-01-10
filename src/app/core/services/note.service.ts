@@ -198,6 +198,33 @@ export class NoteService {
     );
   }
 
+  permanentDeleteNote(noteId: string): Observable<boolean> {
+    return this.http.delete<ApiResponse<any>>(`/api/notes/${noteId}/permanent`).pipe(
+      map(response => {
+        if (response.code === 200) {
+          const currentNotes = this.notesSubject.value;
+          const updatedNotes = currentNotes.filter(note => note.noteId !== noteId);
+          this.notesSubject.next(updatedNotes);
+
+          this.pendingSyncNotes.delete(noteId);
+          this.pendingSyncCountSubject.next(this.pendingSyncNotes.size);
+
+          if (this.currentNoteSubject.value?.noteId === noteId) {
+            const fallback = updatedNotes.find(n => !n.isDeleted) || null;
+            this.currentNoteSubject.next(fallback);
+          }
+
+          return true;
+        }
+        return false;
+      }),
+      catchError(error => {
+        console.error('永久删除笔记失败:', error);
+        return of(false);
+      })
+    );
+  }
+
   //同步笔记
   syncNotes(localChanges: Note[] = []): Observable<SyncResponse | null> {
     const syncRequest: SyncRequest = {

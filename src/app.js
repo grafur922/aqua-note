@@ -15,7 +15,7 @@ function createWindow() {
     show: false,
     titleBarStyle: 'hidden',
     ...(process.platform !== 'darwin' ? { titleBarOverlay: { color: '#fff', symbolColor: '#000', height: 44 } } : {}),
-    icon: path.join(__dirname, '../public/favicon.ico')
+    icon: path.join(__dirname, '../public/note.ico')
   });
   
 

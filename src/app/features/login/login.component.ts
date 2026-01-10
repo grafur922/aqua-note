@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule,FormGroup,FormControl,Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -11,6 +11,7 @@ import { LoginCredentials } from './models/login-credentials.model';
 @Component({
   selector: 'app-login',
   imports: [
+    RouterLink,
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
