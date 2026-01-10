@@ -1,1 +1,77 @@
-<p>register works!</p>
+<div class="login-container">
+  <div class="login-content">
+    <div class="illustration-section">
+      <div class="illustration-wrapper">
+        <img src="assets/images/notebook.jpg" alt="Notebook illustration" class="notebook-image">
+        <div class="illustration-overlay">
+          <h1 class="app-title">Aqua笔记</h1>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-wrapper">
+        <div class="form-header">
+          <h2>注册</h2>
+        </div>
+
+        <form class="login-form" [formGroup]="registerForm">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label for="userName">用户名</mat-label>
+            <input matInput type="text" id="userName" formControlName="userName">
+            <mat-icon matSuffix>person</mat-icon>
+            @if(registerForm.get('userName')?.hasError('required')){
+              <mat-error>用户名不能为空</mat-error>
+            }
+            @if(registerForm.get('userName')?.hasError('minlength')){
+              <mat-error>用户名长度必须在2-50个字符之间</mat-error>
+            }
+            @if(registerForm.get('userName')?.hasError('maxlength')){
+              <mat-error>用户名长度必须在2-50个字符之间</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label for="email">邮箱</mat-label>
+            <input matInput type="email" id="email" formControlName="email">
+            <mat-icon matSuffix>email</mat-icon>
+            @if(registerForm.get('email')?.hasError('required')){
+              <mat-error>邮箱不能为空</mat-error>
+            }
+            @if(registerForm.get('email')?.hasError('email')){
+              <mat-error>邮箱格式不正确</mat-error>
+            }
+            @if(registerForm.get('email')?.hasError('emailExists')){
+              <mat-error>邮箱已存在</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label for="password">密码</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" id="password" formControlName="password">
+            @if(registerForm.get('password')?.hasError('required')){
+              <mat-error>密码不能为空</mat-error>
+            }
+            @if(registerForm.get('password')?.hasError('minlength')){
+              <mat-error>密码长度必须在6-20个字符之间</mat-error>
+            }
+            @if(registerForm.get('password')?.hasError('maxlength')){
+              <mat-error>密码长度必须在6-20个字符之间</mat-error>
+            }
+            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+              <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" (click)="onSubmit()" class="login-button full-width" [disabled]="!registerForm.valid">
+            注册
+          </button>
+
+          <div class="signup-link">
+            已有账号？<a routerLink="/login" class="link">去登录</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

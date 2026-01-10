@@ -103,11 +103,12 @@ export class RecycleBinComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.noteService.deleteNote(note.noteId)
+      this.noteService.permanentDeleteNote(note.noteId)
         .pipe(takeUntil(this.destroy$))
         .subscribe((success) => {
           if (success) {
             this.snackBar.open('已永久删除', '关闭', { duration: 1500 });
+            this.refresh();
           } else {
             this.snackBar.open('永久删除失败', '关闭', { duration: 2000 });
           }
